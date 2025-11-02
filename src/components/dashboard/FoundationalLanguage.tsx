@@ -30,24 +30,36 @@ export default function FoundationalLanguage({ className }: ComponentProps<'div'
                 <CardDescription>Learn the alphabet through sacred words.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col flex-grow items-center justify-between">
-                <div className="text-center w-full relative p-6 bg-secondary/30 rounded-lg flex-grow flex flex-col justify-center items-center">
-                    <div className="absolute top-2 left-2">
-                        <Button variant="ghost" size="icon" onClick={handlePrev}>
-                            <ArrowLeft className="h-5 w-5" />
-                        </Button>
+                <div className="w-full flex-grow flex items-center justify-center relative">
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={handlePrev}
+                        className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-background/50 hover:bg-background/80"
+                    >
+                        <ArrowLeft className="h-5 w-5" />
+                        <span className="sr-only">Previous Letter</span>
+                    </Button>
+
+                    <div className="text-center w-[300px] h-[350px] p-6 bg-secondary/30 rounded-lg flex flex-col justify-center items-center">
+                        <p className="text-sm text-muted-foreground">{currentLetter.transliteration}</p>
+                        <p className="font-headline text-8xl my-4 text-primary-foreground">{currentLetter.letter}</p>
+                        <p className="font-bold text-2xl text-primary">{currentLetter.name}</p>
+                        <div className="border-t border-border w-1/2 my-4"></div>
+                        <p className="font-headline text-3xl text-primary" dir="rtl">{currentLetter.exampleWord}</p>
+                        <p className="font-semibold text-lg">{currentLetter.exampleTranslation}</p>
+                        <p className="text-muted-foreground">"{currentLetter.exampleMeaning}"</p>
                     </div>
-                    <div className="absolute top-2 right-2">
-                        <Button variant="ghost" size="icon" onClick={handleNext}>
-                            <ArrowRight className="h-5 w-5" />
-                        </Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{currentLetter.transliteration}</p>
-                    <p className="font-headline text-8xl my-4 text-primary-foreground">{currentLetter.letter}</p>
-                    <p className="font-bold text-2xl text-primary">{currentLetter.name}</p>
-                    <div className="border-t border-border w-1/2 my-4"></div>
-                    <p className="font-headline text-3xl text-primary" dir="rtl">{currentLetter.exampleWord}</p>
-                    <p className="font-semibold text-lg">{currentLetter.exampleTranslation}</p>
-                    <p className="text-muted-foreground">"{currentLetter.exampleMeaning}"</p>
+
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={handleNext}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-background/50 hover:bg-background/80"
+                        >
+                        <ArrowRight className="h-5 w-5" />
+                        <span className="sr-only">Next Letter</span>
+                    </Button>
                 </div>
                 <Button variant="outline" className="w-full mt-4">
                     <HelpCircle className="mr-2 h-4 w-4" />
