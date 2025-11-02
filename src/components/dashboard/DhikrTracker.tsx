@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect } from "react";
 import { Plus, Minus, Repeat } from "lucide-react";
@@ -30,14 +31,29 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
   useEffect(() => {
     if (dhikrRecord) {
       setCount(dhikrRecord.count || 0);
-      setGoal(dhikrRecord.goal || 1000);
+      const newGoal = dhikrRecord.goal || 1000;
+      if(newGoal < 1000) {
+        setGoal(1000);
+        updateDhikrRecord(dhikrRecord.count, 1000);
+      } else {
+        setGoal(newGoal);
+      }
     } else {
-        // If not logged in, try to get from local storage
         if (!user) {
             const localCount = localStorage.getItem('dhikrCount');
             const localGoal = localStorage.getItem('dhikrGoal');
             if (localCount) setCount(JSON.parse(localCount));
-            if (localGoal) setGoal(JSON.parse(localGoal));
+            if (localGoal) {
+              const parsedGoal = JSON.parse(localGoal);
+              if (parsedGoal < 1000) {
+                setGoal(1000);
+                localStorage.setItem('dhikrGoal', JSON.stringify(1000));
+              } else {
+                setGoal(parsedGoal);
+              }
+            } else {
+              setGoal(1000);
+            }
         } else {
             setCount(0);
             setGoal(1000);
@@ -46,19 +62,19 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
   }, [dhikrRecord, user]);
 
   const updateDhikrRecord = (newCount: number, newGoal?: number) => {
+    const finalGoal = newGoal ?? goal;
     if (user && dhikrRecordRef) {
       const dataToSet = {
         count: newCount,
-        goal: newGoal ?? goal,
+        goal: finalGoal,
         date: new Date().toISOString().split('T')[0],
         guestUserId: user?.uid,
         dhikrName: 'General'
       };
       setDocumentNonBlocking(dhikrRecordRef, dataToSet, { merge: true });
     } else {
-        // save to local storage if not logged in
         localStorage.setItem('dhikrCount', JSON.stringify(newCount));
-        if (newGoal) localStorage.setItem('dhikrGoal', JSON.stringify(newGoal));
+        localStorage.setItem('dhikrGoal', JSON.stringify(finalGoal));
     }
     setCount(newCount);
     if(newGoal) setGoal(newGoal);
@@ -85,7 +101,7 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
     updateDhikrRecord(0);
   }
 
-  const progress = goal > 0 ? (count / goal) * 100 : 0;
+  const progress = goal > 0 ? Math.min((count / goal) * 100, 100) : 0;
 
   return (
     <Card className={cn("h-full flex flex-col", className)}>
