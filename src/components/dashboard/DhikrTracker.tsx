@@ -3,11 +3,11 @@ import { useState, useEffect } from "react";
 import { Plus, Minus, Repeat } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { ComponentProps } from 'react';
 import { Flame } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 export default function DhikrTracker({ className }: ComponentProps<'div'>) {
   const [count, setCount] = useState(0);
@@ -53,6 +53,14 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
       setCustomAmount("");
     }
   };
+  
+  const handleIncrement = () => {
+    setCount(c => c + 100);
+  }
+
+  const handleDecrement = () => {
+    setCount(c => Math.max(0, c - 100));
+  }
 
   const progress = goal > 0 ? (count / goal) * 100 : 0;
 
@@ -60,40 +68,47 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
     <Card className={cn("h-full flex flex-col", className)}>
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center justify-between">
-          Dhikr Tracker
+          Advanced Dhikr Goal
           <Button variant="ghost" size="icon" onClick={() => setCount(0)} aria-label="Reset Dhikr count"><Repeat className="w-4 h-4 text-muted-foreground" /></Button>
         </CardTitle>
-        <CardDescription>Minimum 1000x remembrance per day.</CardDescription>
+        <CardDescription>Minimum 1,000x remembrance a day.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 justify-between flex-grow">
-          <div className="space-y-4">
-            <div className="text-right">
-                <span className="text-primary font-bold">{count.toLocaleString()}</span>
+          <div className="space-y-6">
+            <div className="text-center">
+                <span className="text-primary font-bold text-4xl">{count.toLocaleString()}</span>
+                <span className="text-muted-foreground text-2xl">/{goal.toLocaleString()}</span>
             </div>
-            <Slider 
-                value={[progress]} 
-                max={100}
-                className="w-full"
-            />
-            <div className="flex justify-center gap-2">
-                <Button variant="outline" size="icon" onClick={() => setCount(c => c + 1)} aria-label="Increment Dhikr count"><Plus /></Button>
-                <Button variant="outline" size="icon" onClick={() => setCount(c => Math.max(0, c - 1))} aria-label="Decrement Dhikr count"><Minus /></Button>
+
+            <div>
+              <Progress value={progress} className="w-full h-2" />
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>0</span>
+                <span>{goal.toLocaleString()}</span>
+              </div>
             </div>
-             <form onSubmit={handleCustomAmountSubmit} className="flex gap-2 pt-4">
-              <Input 
-                id="dhikr-custom-amount"
-                type="number" 
-                value={customAmount}
-                onChange={(e) => setCustomAmount(e.target.value)}
-                placeholder="Add custom amount"
-                className="bg-card-foreground/5"
-                aria-label="Custom Dhikr amount"
-              />
-              <Button type="submit">Add</Button>
-            </form>
+            
+            <div className="flex items-center gap-2">
+                <div className="flex justify-center gap-2">
+                    <Button variant="outline" size="icon" onClick={handleIncrement} aria-label="Increment Dhikr count by 100"><Plus /></Button>
+                    <Button variant="outline" size="icon" onClick={handleDecrement} aria-label="Decrement Dhikr count by 100"><Minus /></Button>
+                </div>
+                 <form onSubmit={handleCustomAmountSubmit} className="flex gap-2 flex-grow">
+                  <Input 
+                    id="dhikr-custom-amount"
+                    type="number" 
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                    placeholder="Add custom amount"
+                    className="bg-card-foreground/5"
+                    aria-label="Custom Dhikr amount"
+                  />
+                  <Button type="submit">Add</Button>
+                </form>
+            </div>
           </div>
           <div className="flex items-center justify-center gap-4 text-muted-foreground pt-4">
-             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-primary/50"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+             <Flame className="w-6 h-6 text-primary/50" />
              <div className="w-2 h-2 rounded-full bg-muted-foreground/50"></div>
             <span className="text-sm">Day Streak</span>
         </div>
