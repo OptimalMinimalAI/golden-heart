@@ -9,6 +9,8 @@ import DhikrMastery from "@/components/dashboard/DhikrMastery";
 import StreakCounter from "@/components/dashboard/StreakCounter";
 import { PRAYER_NAMES } from "@/lib/data";
 import { Skeleton } from "@/components/ui/skeleton";
+import PrayerToolbelt from "@/components/dashboard/PrayerToolbelt";
+import FoundationalLanguage from "@/components/dashboard/FoundationalLanguage";
 
 export default function DashboardPage() {
   const [completedPrayers, setCompletedPrayers] = useState<Set<string>>(new Set());
@@ -109,6 +111,8 @@ export default function DashboardPage() {
             <Skeleton className="lg:col-span-2 h-96" />
             <Skeleton className="lg:col-span-4 h-96" />
             <Skeleton className="lg:col-span-2 h-96" />
+            <Skeleton className="lg:col-span-3 h-96" />
+            <Skeleton className="lg:col-span-3 h-96" />
           </div>
         </div>
       </div>
@@ -130,6 +134,8 @@ export default function DashboardPage() {
           <DhikrTracker className="lg:col-span-2" />
           <AllahNames className="lg:col-span-4" />
           <DhikrMastery className="lg:col-span-2" />
+          <PrayerToolbelt className="lg:col-span-3" />
+          <FoundationalLanguage className="lg:col-span-3" />
         </div>
       </div>
     </main>
