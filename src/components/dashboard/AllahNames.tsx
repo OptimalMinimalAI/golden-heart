@@ -1,37 +1,61 @@
+"use client";
+
+import { useState } from 'react';
 import { ALLAH_NAMES } from "@/lib/data";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { BookOpen } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { BookOpen, ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ComponentProps } from 'react';
 
+const ITEMS_PER_PAGE = 11;
+
 export default function AllahNames({ className }: ComponentProps<'div'>) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(ALLAH_NAMES.length / ITEMS_PER_PAGE);
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentNames = ALLAH_NAMES.slice(startIndex, endIndex);
+
   return (
     <Card className={cn("h-full", className)}>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="font-headline text-2xl flex items-center gap-2">
           <BookOpen /> The 99 Names of Allah
         </CardTitle>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={handlePrevPage} disabled={currentPage === 1}>
+            <ArrowLeft className="h-4 w-4" />
+            <span className="sr-only">Previous Page</span>
+          </Button>
+          <span className="text-sm text-muted-foreground">{currentPage} / {totalPages}</span>
+          <Button variant="ghost" size="icon" onClick={handleNextPage} disabled={currentPage === totalPages}>
+            <ArrowRight className="h-4 w-4" />
+            <span className="sr-only">Next Page</span>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[450px] pr-4">
-          <Accordion type="single" collapsible className="w-full">
-            {ALLAH_NAMES.map((name) => (
-              <AccordionItem value={`item-${name.id}`} key={name.id}>
-                <AccordionTrigger className="text-lg hover:no-underline">
-                  <div className="flex items-center justify-between w-full">
-                    <span className="font-medium text-left">{name.id}. {name.name}</span>
-                    <span className="font-headline text-2xl text-right text-primary" dir="rtl">{name.transliteration}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="text-base text-muted-foreground pl-2">
-                  {name.en}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </ScrollArea>
+        <div className="space-y-4">
+          {currentNames.map((name) => (
+            <div key={name.id} className="flex justify-between items-start py-2 border-b border-border/50 last:border-b-0">
+              <div className="flex-1">
+                <p className="font-bold text-lg">{name.id}. {name.name}</p>
+                <p className="text-muted-foreground text-sm mt-1">{name.en}</p>
+              </div>
+              <p className="font-headline text-2xl text-right text-primary/80" dir="rtl">{name.transliteration}</p>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
