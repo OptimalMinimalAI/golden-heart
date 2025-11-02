@@ -15,6 +15,7 @@ import { collection, doc } from "firebase/firestore";
 import { enrichDhikr } from "@/ai/flows/dhikr-enrichment-flow";
 import { Skeleton } from "../ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui/dialog";
+import { Label } from "../ui/label";
 
 interface Dhikr {
   id: string;
@@ -30,6 +31,7 @@ export default function DhikrMastery({ className }: ComponentProps<'div'>) {
   const [isEnriching, setIsEnriching] = useState(false);
   const [editingDhikr, setEditingDhikr] = useState<Dhikr | null>(null);
   const [newTranslation, setNewTranslation] = useState("");
+  const [newTransliteration, setNewTransliteration] = useState("");
 
   const { toast } = useToast();
   const { user } = useUser();
@@ -55,6 +57,7 @@ export default function DhikrMastery({ className }: ComponentProps<'div'>) {
   useEffect(() => {
     if (editingDhikr) {
       setNewTranslation(editingDhikr.translation || "");
+      setNewTransliteration(editingDhikr.transliteration || "");
     }
   }, [editingDhikr]);
 
@@ -126,22 +129,27 @@ export default function DhikrMastery({ className }: ComponentProps<'div'>) {
     }
   }
 
-  const handleUpdateTranslation = () => {
+  const handleUpdateDhikr = () => {
     if (!editingDhikr) return;
+
+    const updatedFields = {
+      translation: newTranslation,
+      transliteration: newTransliteration,
+    };
 
     if (user && dhikrsRef) {
         const dhikrDocRef = doc(dhikrsRef, editingDhikr.id);
-        setDocumentNonBlocking(dhikrDocRef, { translation: newTranslation }, { merge: true });
+        setDocumentNonBlocking(dhikrDocRef, updatedFields, { merge: true });
     } else {
         const updatedDhikrs = localDhikrs.map(d => 
-            d.id === editingDhikr.id ? { ...d, translation: newTranslation } : d
+            d.id === editingDhikr.id ? { ...d, ...updatedFields } : d
         );
         setLocalDhikrs(updatedDhikrs);
         localStorage.setItem('dhikrs', JSON.stringify(updatedDhikrs));
     }
 
     toast({
-        title: "Translation Updated",
+        title: "Dhikr Updated",
     });
     setEditingDhikr(null);
   };
@@ -204,19 +212,32 @@ export default function DhikrMastery({ className }: ComponentProps<'div'>) {
       <Dialog open={!!editingDhikr} onOpenChange={(isOpen) => !isOpen && setEditingDhikr(null)}>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Edit Translation</DialogTitle>
+                <DialogTitle>Edit Dhikr</DialogTitle>
                 <DialogDescription>
-                    Update the English translation for "{editingDhikr?.name}".
+                    Update the details for "{editingDhikr?.name}".
                 </DialogDescription>
             </DialogHeader>
-            <Input 
-                value={newTranslation}
-                onChange={(e) => setNewTranslation(e.target.value)}
-                className="my-4"
-            />
+            <div className="my-4 space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="transliteration">Transliteration</Label>
+                    <Input 
+                        id="transliteration"
+                        value={newTransliteration}
+                        onChange={(e) => setNewTransliteration(e.target.value)}
+                    />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="translation">Translation</Label>
+                    <Input 
+                        id="translation"
+                        value={newTranslation}
+                        onChange={(e) => setNewTranslation(e.target.value)}
+                    />
+                </div>
+            </div>
             <DialogFooter>
                 <Button variant="outline" onClick={() => setEditingDhikr(null)}>Cancel</Button>
-                <Button onClick={handleUpdateTranslation}>Save</Button>
+                <Button onClick={handleUpdateDhikr}>Save Changes</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
