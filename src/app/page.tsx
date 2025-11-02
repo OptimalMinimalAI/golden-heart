@@ -113,8 +113,8 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 mt-6">
                     <Skeleton className="lg:col-span-4 h-96" />
                     <Skeleton className="lg:col-span-2 h-96" />
-                    <Skeleton className="lg:col-span-4 h-96" />
-                    <Skeleton className="lg:col-span-2 h-96" />
+                    <Skeleton className="lg:col-span-6 h-96" />
+                    <Skeleton className="lg:col-span-6 h-96" />
                     <Skeleton className="lg:col-span-3 h-96" />
                     <Skeleton className="lg:col-span-3 h-96" />
                 </div>
@@ -138,8 +138,8 @@ export default function DashboardPage() {
               className="lg:col-span-4"
             />
             <DhikrTracker className="lg:col-span-2" />
-            <AllahNames className="lg:col-span-4" />
-            <DhikrMastery className="lg:col-span-2" />
+            <AllahNames className="lg:col-span-6" />
+            <DhikrMastery className="lg:col-span-6" />
             <PrayerToolbelt className="lg:col-span-3" />
             <FoundationalLanguage className="lg:col-span-3" />
           </div>
