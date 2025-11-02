@@ -97,45 +97,52 @@ export default function DashboardPage() {
 
   if (!isClient) {
     return (
-      <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto">
-          <header className="text-center">
-            <div className="flex items-center justify-center gap-4">
-              <Skeleton className="w-10 h-10 rounded-full" />
-              <Skeleton className="h-12 w-96" />
-            </div>
-            <Skeleton className="h-6 w-80 mt-2 mx-auto" />
-          </header>
-          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 mt-6">
-            <Skeleton className="lg:col-span-4 h-96" />
-            <Skeleton className="lg:col-span-2 h-96" />
-            <Skeleton className="lg:col-span-4 h-96" />
-            <Skeleton className="lg:col-span-2 h-96" />
-            <Skeleton className="lg:col-span-3 h-96" />
-            <Skeleton className="lg:col-span-3 h-96" />
+      <div className="bg-background min-h-screen">
+        <header className="flex items-center justify-between py-4 px-6">
+          <div className="flex items-center gap-3">
+             <Skeleton className="w-8 h-8 rounded-full" />
+             <Skeleton className="h-7 w-96" />
           </div>
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-9 w-9" />
+            <Skeleton className="h-9 w-9 rounded-full" />
+          </div>
+        </header>
+        <div className="p-4 sm:p-6 lg:p-8">
+            <div className="max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 mt-6">
+                    <Skeleton className="lg:col-span-4 h-96" />
+                    <Skeleton className="lg:col-span-2 h-96" />
+                    <Skeleton className="lg:col-span-4 h-96" />
+                    <Skeleton className="lg:col-span-2 h-96" />
+                    <Skeleton className="lg:col-span-3 h-96" />
+                    <Skeleton className="lg:col-span-3 h-96" />
+                </div>
+            </div>
         </div>
       </div>
     );
   }
 
   return (
-    <main className="bg-background min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        <Header />
-        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 mt-6">
-          <PrayerTracker
-            prayers={PRAYER_NAMES}
-            completedPrayers={completedPrayers}
-            onTogglePrayer={handlePrayerToggle}
-            streak={streak}
-            className="lg:col-span-4"
-          />
-          <DhikrTracker className="lg:col-span-2" />
-          <AllahNames className="lg:col-span-4" />
-          <DhikrMastery className="lg:col-span-2" />
-          <PrayerToolbelt className="lg:col-span-3" />
-          <FoundationalLanguage className="lg:col-span-3" />
+    <main className="bg-background min-h-screen">
+      <Header />
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+            <PrayerTracker
+              prayers={PRAYER_NAMES}
+              completedPrayers={completedPrayers}
+              onTogglePrayer={handlePrayerToggle}
+              streak={streak}
+              className="lg:col-span-4"
+            />
+            <DhikrTracker className="lg:col-span-2" />
+            <AllahNames className="lg:col-span-4" />
+            <DhikrMastery className="lg:col-span-2" />
+            <PrayerToolbelt className="lg:col-span-3" />
+            <FoundationalLanguage className="lg:col-span-3" />
+          </div>
         </div>
       </div>
     </main>
