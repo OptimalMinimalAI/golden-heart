@@ -22,7 +22,7 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
     if (savedCount) setCount(parseInt(savedCount, 10));
     if (savedGoal) {
         const savedGoalInt = parseInt(savedGoal, 10);
-        if (savedGoalInt) {
+        if (savedGoalInt > 0) {
             setGoal(savedGoalInt);
         } else {
             setGoal(1000);
