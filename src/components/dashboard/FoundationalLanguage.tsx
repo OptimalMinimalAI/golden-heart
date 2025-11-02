@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ALPHABET } from "@/lib/data";
@@ -93,16 +93,16 @@ export default function FoundationalLanguage({ className }: ComponentProps<'div'
                             <span className="sr-only">Previous Letter</span>
                         </Button>
 
-                        <div className={cn("relative w-[300px] h-[350px] transition-transform duration-700 [transform-style:preserve-3d]", isFlipped && "[transform:rotateY(180deg)]")}>
+                        <div className={cn("relative w-[380px] h-[350px] transition-transform duration-700 [transform-style:preserve-3d]", isFlipped && "[transform:rotateY(180deg)]")}>
                             {/* Front of Card */}
                             <div onClick={handleFlip} className="absolute w-full h-full p-6 bg-secondary/30 rounded-lg flex flex-col justify-center items-center cursor-pointer [backface-visibility:hidden]">
                                 <button onClick={(e) => { e.stopPropagation(); handlePronounce(currentLetter.name) }} className='flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors'>
                                     {isSpeaking ? <Loader className='w-4 h-4 animate-spin' /> : <Volume2 className='w-4 h-4' />}
                                     {currentLetter.transliteration}
                                 </button>
-                                <p className="font-headline text-8xl my-4 text-foreground">{currentLetter.letter}</p>
+                                <p className="font-headline text-8xl my-4 text-white">{currentLetter.letter}</p>
                                 <p className="font-bold text-2xl text-primary">{currentLetter.name}</p>
-                                <div className="border-t border-border w-1/2 my-4"></div>
+                                <div className="border-t border-border/50 w-1/2 my-4"></div>
                                 <p className="font-headline text-3xl text-primary" dir="rtl">{currentLetter.exampleWord}</p>
                                 <p className="font-semibold text-lg">{currentLetter.exampleTranslation}</p>
                                 <p className="text-muted-foreground text-sm">"{currentLetter.exampleMeaning}"</p>
