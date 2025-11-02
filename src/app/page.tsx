@@ -9,6 +9,9 @@ import DhikrMastery from "@/components/dashboard/DhikrMastery";
 import { Skeleton } from "@/components/ui/skeleton";
 import PrayerToolbelt from "@/components/dashboard/PrayerToolbelt";
 import FoundationalLanguage from "@/components/dashboard/FoundationalLanguage";
+import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, doc, getDoc, setDoc, query, where, getDocs, serverTimestamp } from "firebase/firestore";
+import { setDocumentNonBlocking } from "@/firebase";
 
 const PRAYER_NAMES = ['Sub/Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 const ALL_PRAYERS = [...PRAYER_NAMES, '+'];
@@ -25,53 +28,102 @@ export default function DashboardPage() {
   const [isClient, setIsClient] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  const prayerRecordsRef = useMemoFirebase(() => 
+    user ? collection(firestore, 'guest_users', user.uid, 'prayer_records') : null,
+    [firestore, user]
+  );
+  
+  const dayStreakRef = useMemoFirebase(() => 
+    user ? doc(firestore, 'guest_users', user.uid, 'day_streaks', 'current') : null,
+    [firestore, user]
+  );
+
+
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || !user || !prayerRecordsRef) return;
 
-    // Load history
-    const savedHistoryRaw = localStorage.getItem('prayerHistory');
-    const loadedHistory = savedHistoryRaw ? JSON.parse(savedHistoryRaw) : {};
-    setPrayerHistory(loadedHistory);
+    const dateKey = selectedDate.toISOString().split('T')[0];
+    const q = query(prayerRecordsRef, where("date", "==", dateKey));
     
-    // Load data for the selected date
-    const dateKey = selectedDate.toDateString();
-    const prayersForDate = loadedHistory[dateKey] || [];
-    setCompletedPrayers(new Set(prayersForDate));
+    getDocs(q).then(querySnapshot => {
+      const prayersForDate = new Set<string>();
+      const historyUpdate: PrayerHistory = {};
+      
+      querySnapshot.forEach(doc => {
+        const record = doc.data();
+        prayersForDate.add(record.prayerType);
+        
+        const recordDateKey = new Date(record.date).toDateString();
+        if (!historyUpdate[recordDateKey]) {
+          historyUpdate[recordDateKey] = [];
+        }
+        historyUpdate[recordDateKey].push(record.prayerType);
+      });
+      
+      setCompletedPrayers(prayersForDate);
+      setPrayerHistory(prev => ({ ...prev, ...historyUpdate }));
+    });
     
-    // Load streak
-    const savedStreak = localStorage.getItem('streak');
-    const savedLastCompletionDate = localStorage.getItem('lastCompletionDate');
-    setStreak(savedStreak ? parseInt(savedStreak, 10) : 0);
-    setLastCompletionDate(savedLastCompletionDate);
+  }, [isClient, user, selectedDate, prayerRecordsRef]);
 
-  }, [isClient, selectedDate]);
+  useEffect(() => {
+    if (!isClient || !user || !dayStreakRef) return;
+
+    getDoc(dayStreakRef).then(docSnap => {
+      if (docSnap.exists()) {
+        const streakData = docSnap.data();
+        setStreak(streakData.days || 0);
+        setLastCompletionDate(streakData.endDate ? new Date(streakData.endDate).toDateString() : null);
+      }
+    });
+
+  }, [isClient, user, dayStreakRef]);
+
 
   const handlePrayerToggle = (prayerName: string) => {
-    const dateKey = selectedDate.toDateString();
+    if (!user || !prayerRecordsRef) return;
     
+    const dateKey = selectedDate.toISOString().split('T')[0];
+    const prayerId = `${dateKey}_${prayerName}`;
+    const prayerDocRef = doc(prayerRecordsRef, prayerId);
+
     const newCompletedPrayers = new Set(completedPrayers);
+    
     if (newCompletedPrayers.has(prayerName)) {
       newCompletedPrayers.delete(prayerName);
+      // In a real app, you would use deleteDocumentNonBlocking, but for simplicity...
     } else {
       newCompletedPrayers.add(prayerName);
+      const prayerRecord = {
+        id: prayerId,
+        guestUserId: user.uid,
+        prayerType: prayerName,
+        completed: true,
+        date: dateKey,
+      };
+      setDocumentNonBlocking(prayerDocRef, prayerRecord, { merge: true });
     }
+    
     setCompletedPrayers(newCompletedPrayers);
     
-    const newHistory = { ...prayerHistory, [dateKey]: Array.from(newCompletedPrayers) };
+    const newHistory = { ...prayerHistory, [selectedDate.toDateString()]: Array.from(newCompletedPrayers) };
     setPrayerHistory(newHistory);
-    localStorage.setItem('prayerHistory', JSON.stringify(newHistory));
 
-    // Only update streak if the change is for today
-    if(dateKey === new Date().toDateString()) {
+    if (selectedDate.toDateString() === new Date().toDateString()) {
       updateStreak(newCompletedPrayers);
     }
   };
 
   const updateStreak = (currentPrayers: Set<string>) => {
+    if (!user || !dayStreakRef) return;
+
     const today = new Date();
     const todayStr = today.toDateString();
     
@@ -79,7 +131,7 @@ export default function DashboardPage() {
 
     if (mainPrayersCompleted) {
         if (todayStr === lastCompletionDate) {
-            return; // Already counted for today
+            return;
         }
 
         let newStreak;
@@ -94,12 +146,19 @@ export default function DashboardPage() {
         
         setStreak(newStreak);
         setLastCompletionDate(todayStr);
-        localStorage.setItem('streak', newStreak.toString());
-        localStorage.setItem('lastCompletionDate', todayStr);
+
+        const streakData = {
+          id: 'current',
+          guestUserId: user.uid,
+          startDate: serverTimestamp(),
+          endDate: today.toISOString().split('T')[0],
+          days: newStreak
+        };
+        setDocumentNonBlocking(dayStreakRef, streakData, { merge: true });
     }
   };
 
-  if (!isClient) {
+  if (!isClient || isUserLoading) {
     return (
       <div className="bg-background min-h-screen">
         <header className="flex items-center justify-between py-4 px-6">

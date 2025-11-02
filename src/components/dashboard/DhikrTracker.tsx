@@ -8,58 +8,69 @@ import { cn } from "@/lib/utils";
 import type { ComponentProps } from 'react';
 import { Flame } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
+import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function DhikrTracker({ className }: ComponentProps<'div'>) {
   const [count, setCount] = useState(0);
   const [goal, setGoal] = useState(1000);
   const [customAmount, setCustomAmount] = useState("");
-  const [isClient, setIsClient] = useState(false);
+  
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const dhikrRecordRef = useMemoFirebase(() =>
+    user ? doc(firestore, 'guest_users', user.uid, 'dhikr_records', 'today') : null,
+    [user, firestore]
+  );
+
+  const { data: dhikrRecord } = useDoc<{count: number, goal: number}>(dhikrRecordRef);
 
   useEffect(() => {
-    setIsClient(true);
-    const savedCount = localStorage.getItem('dhikrCount');
-    const savedGoal = localStorage.getItem('dhikrGoal');
-    if (savedCount) setCount(parseInt(savedCount, 10));
-    
-    if (savedGoal) {
-        const savedGoalInt = parseInt(savedGoal, 10);
-        if (savedGoalInt > 0) {
-            setGoal(savedGoalInt);
-        } else {
-            setGoal(1000);
-        }
+    if (dhikrRecord) {
+      setCount(dhikrRecord.count || 0);
+      setGoal(dhikrRecord.goal || 1000);
     } else {
-        setGoal(1000);
+      setCount(0);
+      setGoal(1000);
     }
-  }, []);
+  }, [dhikrRecord]);
 
-  useEffect(() => {
-    if(isClient) {
-      localStorage.setItem('dhikrCount', String(count));
+  const updateDhikrRecord = (newCount: number, newGoal?: number) => {
+    if (dhikrRecordRef) {
+      const dataToSet = {
+        count: newCount,
+        goal: newGoal ?? goal,
+        date: new Date().toISOString().split('T')[0],
+        guestUserId: user?.uid,
+        dhikrName: 'General'
+      };
+      setDocumentNonBlocking(dhikrRecordRef, dataToSet, { merge: true });
     }
-  }, [count, isClient]);
-
-  useEffect(() => {
-    if(isClient) {
-      localStorage.setItem('dhikrGoal', String(goal));
-    }
-  }, [goal, isClient]);
+    setCount(newCount);
+    if(newGoal) setGoal(newGoal);
+  }
 
   const handleCustomAmountSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const amount = parseInt(customAmount, 10);
     if (!isNaN(amount)) {
-      setCount(c => c + amount);
+      updateDhikrRecord(count + amount);
       setCustomAmount("");
     }
   };
   
   const handleIncrement = () => {
-    setCount(c => c + 100);
+    updateDhikrRecord(count + 100);
   }
 
   const handleDecrement = () => {
-    setCount(c => Math.max(0, c - 100));
+    updateDhikrRecord(Math.max(0, count - 100));
+  }
+  
+  const handleReset = () => {
+    updateDhikrRecord(0);
   }
 
   const progress = goal > 0 ? (count / goal) * 100 : 0;
@@ -69,7 +80,7 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center justify-between">
           Advanced Dhikr Goal
-          <Button variant="ghost" size="icon" onClick={() => setCount(0)} aria-label="Reset Dhikr count"><Repeat className="w-4 h-4 text-muted-foreground" /></Button>
+          <Button variant="ghost" size="icon" onClick={handleReset} disabled={!user} aria-label="Reset Dhikr count"><Repeat className="w-4 h-4 text-muted-foreground" /></Button>
         </CardTitle>
         <CardDescription>Minimum 1,000x remembrance a day.</CardDescription>
       </CardHeader>
@@ -90,8 +101,8 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
             
             <div className="flex items-center gap-2">
                 <div className="flex justify-center gap-2">
-                    <Button variant="outline" size="icon" onClick={handleIncrement} aria-label="Increment Dhikr count by 100"><Plus /></Button>
-                    <Button variant="outline" size="icon" onClick={handleDecrement} aria-label="Decrement Dhikr count by 100"><Minus /></Button>
+                    <Button variant="outline" size="icon" onClick={handleIncrement} disabled={!user} aria-label="Increment Dhikr count by 100"><Plus /></Button>
+                    <Button variant="outline" size="icon" onClick={handleDecrement} disabled={!user} aria-label="Decrement Dhikr count by 100"><Minus /></Button>
                 </div>
                  <form onSubmit={handleCustomAmountSubmit} className="flex gap-2 flex-grow">
                   <Input 
@@ -101,9 +112,10 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
                     onChange={(e) => setCustomAmount(e.target.value)}
                     placeholder="Add custom amount"
                     className="bg-card-foreground/5"
+                    disabled={!user}
                     aria-label="Custom Dhikr amount"
                   />
-                  <Button type="submit">Add</Button>
+                  <Button type="submit" disabled={!user}>Add</Button>
                 </form>
             </div>
           </div>

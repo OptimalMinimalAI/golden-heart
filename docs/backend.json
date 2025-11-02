@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "GuestUser": {
@@ -51,7 +52,7 @@
         "date": {
           "type": "string",
           "description": "Date of the prayer record.",
-          "format": "date-time"
+          "format": "date"
         }
       },
       "required": [
@@ -91,7 +92,7 @@
         "date": {
           "type": "string",
           "description": "Date of the Dhikr record.",
-          "format": "date-time"
+          "format": "date"
         }
       },
       "required": [
@@ -133,9 +134,7 @@
       "required": [
         "id",
         "guestUserId",
-        "name",
-        "arabicText",
-        "translation"
+        "name"
       ]
     },
     "DayStreak": {
@@ -173,11 +172,36 @@
         "startDate",
         "days"
       ]
+    },
+    "PrayerToolbeltItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PrayerToolbeltItem",
+      "type": "object",
+      "description": "Represents a Surah or Ayat in a user's toolbelt.",
+       "properties": {
+        "id": {
+          "type": "string",
+          "description": "The Surah number as a string."
+        },
+        "guestUserId": {
+          "type": "string",
+          "description": "Reference to GuestUser."
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "mastered": {
+            "type": "boolean"
+        }
+      },
+      "required": ["id", "guestUserId", "name", "description", "mastered"]
     }
   },
   "auth": {
     "providers": [
-      "password",
       "anonymous"
     ]
   },
@@ -188,15 +212,9 @@
         "definition": {
           "entityName": "GuestUser",
           "schema": {
-            "$ref": "#/backend/entities/GuestUser"
+            "$ref": "#/entities/GuestUser"
           },
-          "description": "Stores guest user accounts. The document ID serves as the user's unique identifier (UID) for authentication. Functions as root-level private data. Includes the 'guestUserId' as a parameter to allow this to be used in subcollections for Authorization Independence.",
-          "params": [
-            {
-              "name": "guestUserId",
-              "description": "The unique identifier of the guest user, matching the Firebase Auth UID."
-            }
-          ]
+          "description": "Stores guest user accounts."
         }
       },
       {
@@ -204,19 +222,9 @@
         "definition": {
           "entityName": "PrayerRecord",
           "schema": {
-            "$ref": "#/backend/entities/PrayerRecord"
+            "$ref": "#/entities/PrayerRecord"
           },
-          "description": "Stores prayer records for a specific guest user. Located as a subcollection of the GuestUser entity. Includes denormalized 'guestUserId' for authorization independence.",
-          "params": [
-            {
-              "name": "guestUserId",
-              "description": "The unique identifier of the guest user, matching the Firebase Auth UID."
-            },
-            {
-              "name": "prayerRecordId",
-              "description": "The unique identifier of the prayer record."
-            }
-          ]
+          "description": "Stores prayer records for a specific guest user."
         }
       },
       {
@@ -224,19 +232,9 @@
         "definition": {
           "entityName": "DhikrRecord",
           "schema": {
-            "$ref": "#/backend/entities/DhikrRecord"
+            "$ref": "#/entities/DhikrRecord"
           },
-          "description": "Stores Dhikr records for a specific guest user. Located as a subcollection of the GuestUser entity. Includes denormalized 'guestUserId' for authorization independence.",
-          "params": [
-            {
-              "name": "guestUserId",
-              "description": "The unique identifier of the guest user, matching the Firebase Auth UID."
-            },
-            {
-              "name": "dhikrRecordId",
-              "description": "The unique identifier of the dhikr record."
-            }
-          ]
+          "description": "Stores Dhikr records for a specific guest user."
         }
       },
       {
@@ -244,19 +242,9 @@
         "definition": {
           "entityName": "Dhikr",
           "schema": {
-            "$ref": "#/backend/entities/Dhikr"
+            "$ref": "#/entities/Dhikr"
           },
-          "description": "Stores Dhikrs for a specific guest user. Located as a subcollection of the GuestUser entity. Includes denormalized 'guestUserId' for authorization independence.",
-          "params": [
-            {
-              "name": "guestUserId",
-              "description": "The unique identifier of the guest user, matching the Firebase Auth UID."
-            },
-            {
-              "name": "dhikrId",
-              "description": "The unique identifier of the dhikr."
-            }
-          ]
+          "description": "Stores Dhikrs for a specific guest user."
         }
       },
       {
@@ -264,22 +252,22 @@
         "definition": {
           "entityName": "DayStreak",
           "schema": {
-            "$ref": "#/backend/entities/DayStreak"
+            "$ref": "#/entities/DayStreak"
           },
-          "description": "Stores day streak data for a specific guest user. Located as a subcollection of the GuestUser entity. Includes denormalized 'guestUserId' for authorization independence.",
-          "params": [
-            {
-              "name": "guestUserId",
-              "description": "The unique identifier of the guest user, matching the Firebase Auth UID."
+          "description": "Stores day streak data for a specific guest user."
+        }
+      },
+      {
+        "path": "/guest_users/{guestUserId}/prayer_toolbelt/{surahId}",
+        "definition": {
+            "entityName": "PrayerToolbeltItem",
+            "schema": {
+                "$ref": "#/entities/PrayerToolbeltItem"
             },
-            {
-              "name": "dayStreakId",
-              "description": "The unique identifier of the day streak."
-            }
-          ]
+            "description": "Stores items in a user's prayer toolbelt."
         }
       }
     ],
-    "reasoning": "This Firestore structure is designed to support guest users and their prayer/dhikr activities while adhering to the core design principles, especially Authorization Independence and QAPs.\n\n*   **Guest Users:** Guest users are stored in the `/guest_users` collection. This allows for easy management and querying of guest user accounts. The `id` field of each guest user document serves as the `uid` for authentication purposes. Firebase Authentication's Anonymous Auth is used in conjunction with this Firestore structure to manage guest user sessions.\n*   **Prayer and Dhikr Records:** Prayer records and Dhikr records are stored in subcollections under each guest user document (`/guest_users/{guestUserId}/prayer_records` and `/guest_users/{guestUserId}/dhikr_records`). This establishes a clear ownership hierarchy and simplifies security rules.  Day streaks are stored similarly.\n*   **Authorization Independence:**  Since PrayerRecord, DhikrRecord and DayStreak documents are all stored as subcollections of the guest user, authorization rules can depend on the `request.auth.uid` matching the `guestUserId` path parameter and we avoid the need for `get()` calls in security rules. \n*   **QAPs (Rules are not Filters):** The design supports secure `list` operations because data with different access needs is segregated into separate collections and subcollections, and authorization depends on path based ownership.\n*   **Invariants:** The structure supports invariants through path-based ownership, ensuring that only the authenticated guest user can create, read, update, or delete their own prayer records, dhikr records and day streaks."
+    "reasoning": ""
   }
 }

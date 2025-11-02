@@ -24,125 +24,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Allows a guest user to manage their own profile.
-     * @path /guest_users/{guestUserId}
-     * @allow (create) - A guest user (authenticated) can create their profile if the UID matches the document ID.
-     * @allow (get, update, delete) - A guest user (authenticated) can get, update or delete their profile if the UID matches the document ID.
-     * @deny (create) - A guest user cannot create a profile with an ID that does not match their UID.
-     * @deny (update, delete) - A different guest user cannot update or delete another user's profile.
-     * @principle Enforces document ownership for writes.
-     */
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
     match /guest_users/{guestUserId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(guestUserId);
-      allow list: if false;
-      allow create: if isOwner(guestUserId) && request.resource.data.id == guestUserId;
-      allow update: if isExistingOwner(guestUserId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(guestUserId);
+      allow read, write: if isOwner(guestUserId);
     }
-
-    /**
-     * @description Allows a guest user to manage their own prayer records.
-     * @path /guest_users/{guestUserId}/prayer_records/{prayerRecordId}
-     * @allow (create) - A guest user can create prayer records under their user ID.
-     * @allow (get, list, update, delete) - A guest user can get, list, update or delete their own prayer records.
-     * @deny (create) - A guest user cannot create prayer records under another user's ID.
-     * @deny (update, delete) - A different guest user cannot update or delete another user's prayer records.
-     * @principle Enforces document ownership for writes, and authorization independence using denormalized `guestUserId`.
-     */
-    match /guest_users/{guestUserId}/prayer_records/{prayerRecordId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-      allow get: if isOwner(guestUserId);
-      allow list: if isOwner(guestUserId);
-      allow create: if isOwner(guestUserId) && request.resource.data.guestUserId == guestUserId;
-      allow update: if isExistingOwner(guestUserId) && request.resource.data.guestUserId == resource.data.guestUserId;
-      allow delete: if isExistingOwner(guestUserId);
-    }
-
-    /**
-     * @description Allows a guest user to manage their own dhikr records.
-     * @path /guest_users/{guestUserId}/dhikr_records/{dhikrRecordId}
-     * @allow (create) - A guest user can create dhikr records under their user ID.
-     * @allow (get, list, update, delete) - A guest user can get, list, update or delete their own dhikr records.
-     * @deny (create) - A guest user cannot create dhikr records under another user's ID.
-     * @deny (update, delete) - A different guest user cannot update or delete another user's dhikr records.
-     * @principle Enforces document ownership for writes, and authorization independence using denormalized `guestUserId`.
-     */
-    match /guest_users/{guestUserId}/dhikr_records/{dhikrRecordId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-      allow get: if isOwner(guestUserId);
-      allow list: if isOwner(guestUserId);
-      allow create: if isOwner(guestUserId) && request.resource.data.guestUserId == guestUserId;
-      allow update: if isExistingOwner(guestUserId) && request.resource.data.guestUserId == resource.data.guestUserId;
-      allow delete: if isExistingOwner(guestUserId);
-    }
-
-        /**
-     * @description Allows a guest user to manage their own dhikrs.
-     * @path /guest_users/{guestUserId}/dhikrs/{dhikrId}
-     * @allow (create) - A guest user can create dhikrs under their user ID.
-     * @allow (get, list, update, delete) - A guest user can get, list, update or delete their own dhikrs.
-     * @deny (create) - A guest user cannot create dhikrs under another user's ID.
-     * @deny (update, delete) - A different guest user cannot update or delete another user's dhikrs.
-     * @principle Enforces document ownership for writes, and authorization independence using denormalized `guestUserId`.
-     */
-    match /guest_users/{guestUserId}/dhikrs/{dhikrId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-      allow get: if isOwner(guestUserId);
-      allow list: if isOwner(guestUserId);
-      allow create: if isOwner(guestUserId) && request.resource.data.guestUserId == guestUserId;
-      allow update: if isExistingOwner(guestUserId) && request.resource.data.guestUserId == resource.data.guestUserId;
-      allow delete: if isExistingOwner(guestUserId);
-    }
-
-    /**
-     * @description Allows a guest user to manage their own day streaks.
-     * @path /guest_users/{guestUserId}/day_streaks/{dayStreakId}
-     * @allow (create) - A guest user can create day streaks under their user ID.
-     * @allow (get, list, update, delete) - A guest user can get, list, update or delete their own day streaks.
-     * @deny (create) - A guest user cannot create day streaks under another user's ID.
-     * @deny (update, delete) - A different guest user cannot update or delete another user's day streaks.
-     * @principle Enforces document ownership for writes, and authorization independence using denormalized `guestUserId`.
-     */
-    match /guest_users/{guestUserId}/day_streaks/{dayStreakId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-      allow get: if isOwner(guestUserId);
-      allow list: if isOwner(guestUserId);
-      allow create: if isOwner(guestUserId) && request.resource.data.guestUserId == guestUserId;
-      allow update: if isExistingOwner(guestUserId) && request.resource.data.guestUserId == resource.data.guestUserId;
-      allow delete: if isExistingOwner(guestUserId);
+    
+    match /guest_users/{guestUserId}/{collection}/{docId} {
+      allow read, write: if isOwner(guestUserId);
     }
   }
 }

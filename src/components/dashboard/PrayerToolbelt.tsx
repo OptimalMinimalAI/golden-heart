@@ -13,58 +13,44 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SURAHS_CONTENT, type SurahContent } from '@/lib/surahs';
 import { ALL_SURAHS, type SurahMeta } from '@/lib/all-surahs';
 import { Input } from '../ui/input';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection, doc } from 'firebase/firestore';
 
 interface Surah {
     id: number;
     name: string;
     description: string;
     mastered: boolean;
+    guestUserId: string;
 }
 
-const defaultSurahs: Surah[] = [
-    { id: 1, name: "(1) Al-Fatiha", description: "The Opening", mastered: false },
-    { id: 113, name: "(113) Al-Falaq", description: "The Daybreak", mastered: false },
-];
-
 export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
-    const [surahs, setSurahs] = useState<Surah[]>([]);
     const { toast } = useToast();
-    const [isClient, setIsClient] = useState(false);
     const [selectedSurah, setSelectedSurah] = useState<SurahContent | null>(null);
     const [isAddSurahDialogOpen, setIsAddSurahDialogOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    
+    const { user } = useUser();
+    const firestore = useFirestore();
 
-    useEffect(() => {
-        setIsClient(true);
-        const savedSurahs = localStorage.getItem('prayerToolbeltSurahs');
-        if (savedSurahs) {
-            try {
-                const parsedSurahs = JSON.parse(savedSurahs);
-                if (Array.isArray(parsedSurahs) && parsedSurahs.every(s => 'id' in s && 'name' in s)) {
-                    setSurahs(parsedSurahs);
-                } else {
-                    setSurahs(defaultSurahs);
-                }
-            } catch(e) {
-                setSurahs(defaultSurahs);
-            }
-        } else {
-            setSurahs(defaultSurahs);
-        }
-    }, []);
+    const toolbeltRef = useMemoFirebase(() => 
+      user ? collection(firestore, 'guest_users', user.uid, 'prayer_toolbelt') : null,
+      [firestore, user]
+    );
 
-    useEffect(() => {
-        if(isClient) {
-            localStorage.setItem('prayerToolbeltSurahs', JSON.stringify(surahs));
-        }
-    }, [surahs, isClient]);
+    const { data: surahs, isLoading } = useCollection<Surah>(toolbeltRef);
 
-    const handleMasteredToggle = (surahId: number) => {
-        setSurahs(surahs.map(s => s.id === surahId ? { ...s, mastered: !s.mastered } : s));
+    const handleMasteredToggle = (surah: Surah) => {
+        if (!toolbeltRef) return;
+        const surahDocRef = doc(toolbeltRef, String(surah.id));
+        setDocumentNonBlocking(surahDocRef, { mastered: !surah.mastered }, { merge: true });
     };
 
     const handleDeleteSurah = (surahId: number) => {
-        setSurahs(surahs.filter(s => s.id !== surahId));
+        if (!toolbeltRef) return;
+        const surahDocRef = doc(toolbeltRef, String(surahId));
+        deleteDocumentNonBlocking(surahDocRef);
         toast({
             title: "Surah Removed",
             description: "The Surah has been removed from your toolbelt.",
@@ -72,7 +58,9 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
     };
     
     const handleAddSurah = (surahToAdd: SurahMeta) => {
-        if (surahs.some(s => s.id === surahToAdd.id)) {
+        if (!toolbeltRef || !user) return;
+
+        if (surahs?.some(s => s.id === surahToAdd.id)) {
             toast({
                 variant: "destructive",
                 title: "Surah Already Exists",
@@ -81,13 +69,14 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
             return;
         }
 
-        const newSurah: Surah = {
-            id: surahToAdd.id,
+        const newSurah: Omit<Surah, 'id'> = {
             name: `(${surahToAdd.id}) ${surahToAdd.name}`,
             description: surahToAdd.translation,
-            mastered: false
+            mastered: false,
+            guestUserId: user.uid,
         };
-        setSurahs([...surahs, newSurah].sort((a, b) => a.id - b.id));
+        const surahDocRef = doc(toolbeltRef, String(surahToAdd.id));
+        setDocumentNonBlocking(surahDocRef, newSurah, { merge: true });
         toast({
             title: "Surah Added",
             description: `${surahToAdd.name} has been added to your toolbelt.`,
@@ -114,6 +103,8 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
         String(surah.id).includes(searchQuery)
     );
 
+    const sortedSurahs = surahs ? [...surahs].sort((a,b) => a.id - b.id) : [];
+
     return (
         <>
             <Card className={cn("h-full flex flex-col", className)}>
@@ -126,7 +117,8 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                 <CardContent className="flex flex-col flex-grow">
                     <ScrollArea className='flex-grow pr-4 -mr-4'>
                         <div className="space-y-4">
-                            {surahs.map((surah) => (
+                            {isLoading && <p className="text-muted-foreground text-sm">Loading toolbelt...</p>}
+                            {!isLoading && sortedSurahs.map((surah) => (
                                 <div key={surah.id} className="bg-secondary/30 rounded-lg p-4 flex flex-col">
                                     <div onClick={() => openSurahDialog(surah.id)} className="cursor-pointer flex-grow">
                                         <p className="font-bold text-lg">{surah.name}</p>
@@ -134,7 +126,7 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                                     </div>
                                     <div className="flex justify-between items-center mt-4 pt-4 border-t border-border/20">
                                         <div className="flex items-center space-x-2">
-                                            <Checkbox id={`mastered-${surah.id}`} checked={surah.mastered} onCheckedChange={() => handleMasteredToggle(surah.id)} />
+                                            <Checkbox id={`mastered-${surah.id}`} checked={surah.mastered} onCheckedChange={() => handleMasteredToggle(surah)} />
                                             <label
                                                 htmlFor={`mastered-${surah.id}`}
                                                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -148,9 +140,10 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                                     </div>
                                 </div>
                             ))}
+                             {!isLoading && sortedSurahs.length === 0 && <p className="text-sm text-muted-foreground text-center pt-8">{user ? "No Surahs added yet." : "Please log in as a guest to use the toolbelt."}</p>}
                         </div>
                     </ScrollArea>
-                     <Button onClick={() => setIsAddSurahDialogOpen(true)} variant="outline" className="mt-4">
+                     <Button onClick={() => setIsAddSurahDialogOpen(true)} variant="outline" className="mt-4" disabled={!user}>
                         <Plus className="mr-2 h-4 w-4" />
                         Add Surah
                     </Button>
