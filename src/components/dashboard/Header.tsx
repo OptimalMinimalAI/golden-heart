@@ -1,5 +1,4 @@
-import { Moon } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LogIn, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const GoldenHeartIcon = () => (
@@ -25,10 +24,10 @@ export default function Header() {
                 <Moon className="h-5 w-5" />
                 <span className="sr-only">Toggle Theme</span>
             </Button>
-            <Avatar className="h-9 w-9">
-                <AvatarImage src="/placeholder-user.jpg" alt="User avatar" />
-                <AvatarFallback>U</AvatarFallback>
-            </Avatar>
+            <Button variant="outline">
+              <LogIn className="mr-2 h-4 w-4" />
+              Log in
+            </Button>
         </div>
     </header>
   );
