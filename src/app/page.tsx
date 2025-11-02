@@ -182,11 +182,10 @@ export default function DashboardPage() {
         </header>
         <div className="p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
-                <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 mt-6">
-                    <Skeleton className="lg:col-span-4 h-96" />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                     <Skeleton className="lg:col-span-2 h-96" />
-                    <Skeleton className="lg:col-span-6 h-96" />
-                    <Skeleton className="lg:col-span-6 h-96" />
+                    <Skeleton className="lg:col-span-1 h-96" />
+                    <Skeleton className="lg:col-span-3 h-96" />
                     <Skeleton className="lg:col-span-3 h-96" />
                     <Skeleton className="lg:col-span-3 h-96" />
                 </div>
@@ -201,20 +200,20 @@ export default function DashboardPage() {
       <Header />
       <div className="p-4 sm:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <PrayerTracker
               prayers={ALL_PRAYERS}
               completedPrayers={completedPrayers}
               onTogglePrayer={handlePrayerToggle}
               streak={streak}
-              className="lg:col-span-4"
+              className="lg:col-span-2"
               prayerHistory={prayerHistory}
               selectedDate={selectedDate}
               onDateSelect={setSelectedDate}
             />
-            <DhikrTracker className="lg:col-span-2" />
-            <AllahNames className="lg:col-span-6" />
-            <DhikrMastery className="lg:col-span-6" />
+            <DhikrTracker className="lg:col-span-1" />
+            <AllahNames className="lg:col-span-3" />
+            <DhikrMastery className="lg:col-span-3" />
             <PrayerToolbelt className="lg:col-span-3" />
             <FoundationalLanguage className="lg:col-span-3" />
           </div>
