@@ -20,6 +20,7 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
     const savedCount = localStorage.getItem('dhikrCount');
     const savedGoal = localStorage.getItem('dhikrGoal');
     if (savedCount) setCount(parseInt(savedCount, 10));
+    
     if (savedGoal) {
         const savedGoalInt = parseInt(savedGoal, 10);
         if (savedGoalInt > 0) {
