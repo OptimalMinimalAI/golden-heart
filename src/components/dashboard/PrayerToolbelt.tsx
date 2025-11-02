@@ -175,7 +175,7 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                                 {selectedSurah.verses.map((verse) => (
                                     <div key={verse.id} className="p-4 rounded-lg bg-secondary/40 border border-border/50">
                                         <p className="text-2xl font-headline text-right text-primary mb-4" dir="rtl">{verse.arabic}</p>
-                                        <p className="font-semibold text-primary-foreground">{verse.transliteration}</p>
+                                        <p className="font-semibold text-primary">{verse.transliteration}</p>
                                         <p className="text-muted-foreground mt-1">{verse.id}. {verse.translation}</p>
                                     </div>
                                 ))}

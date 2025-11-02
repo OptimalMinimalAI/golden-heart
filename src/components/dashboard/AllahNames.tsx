@@ -32,7 +32,29 @@ export default function AllahNames({ className }: ComponentProps<'div'>) {
         <CardTitle className="font-headline text-2xl flex items-center gap-2">
           <BookOpen /> The 99 Names of Allah
         </CardTitle>
-        <span className="text-sm text-muted-foreground">{currentPage} / {totalPages}</span>
+        <div className="flex items-center gap-4">
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handlePrevPage} 
+                disabled={currentPage === 1}
+                className="rounded-full bg-background/50 hover:bg-background/80 disabled:opacity-30"
+                >
+                <ArrowLeft className="h-5 w-5" />
+                <span className="sr-only">Previous Page</span>
+            </Button>
+             <span className="text-sm text-muted-foreground">{currentPage} / {totalPages}</span>
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleNextPage} 
+                disabled={currentPage === totalPages}
+                className="rounded-full bg-background/50 hover:bg-background/80 disabled:opacity-30"
+                >
+                <ArrowRight className="h-5 w-5" />
+                <span className="sr-only">Next Page</span>
+            </Button>
+        </div>
       </CardHeader>
       <CardContent className="relative">
         <div className="space-y-4">
@@ -46,32 +68,6 @@ export default function AllahNames({ className }: ComponentProps<'div'>) {
             </div>
           ))}
         </div>
-        
-        <div className="absolute inset-x-0 bottom-0 flex justify-center pt-4">
-            <div className="flex items-center gap-4">
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={handlePrevPage} 
-                    disabled={currentPage === 1}
-                    className="rounded-full bg-background/50 hover:bg-background/80 disabled:opacity-30"
-                    >
-                    <ArrowLeft className="h-5 w-5" />
-                    <span className="sr-only">Previous Page</span>
-                </Button>
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={handleNextPage} 
-                    disabled={currentPage === totalPages}
-                    className="rounded-full bg-background/50 hover:bg-background/80 disabled:opacity-30"
-                    >
-                    <ArrowRight className="h-5 w-5" />
-                    <span className="sr-only">Next Page</span>
-                </Button>
-            </div>
-        </div>
-
       </CardContent>
     </Card>
   );
