@@ -69,7 +69,6 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
           <div className="space-y-4">
             <div className="text-right">
                 <span className="text-primary font-bold">{count.toLocaleString()}</span>
-                <span className="text-muted-foreground">/{goal.toLocaleString()}</span>
             </div>
             <Slider 
                 value={[progress]} 
