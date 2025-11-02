@@ -77,24 +77,22 @@ export default function FoundationalLanguage({ className }: ComponentProps<'div'
                                 <p className="text-muted-foreground text-sm">"{currentLetter.exampleMeaning}"</p>
                             </div>
                             {/* Back of Card */}
-                            <div onClick={handleFlip} className="absolute w-full h-full p-6 bg-secondary/50 rounded-lg flex flex-col justify-around items-center cursor-pointer [transform:rotateY(180deg)] [backface-visibility:hidden]">
-                               <div className='flex justify-around w-full'>
+                            <div onClick={handleFlip} className="absolute w-full h-full p-6 bg-secondary/50 rounded-lg flex flex-col justify-center items-center cursor-pointer [transform:rotateY(180deg)] [backface-visibility:hidden] space-y-4">
+                               <div className='text-center'>
+                                    <p className='text-sm text-muted-foreground'>Isolated</p>
+                                    <p className='font-headline text-7xl'>{currentLetter.forms.isolated}</p>
+                               </div>
+                               <div className='flex justify-around w-full' dir="rtl">
                                     <div className='text-center'>
-                                        <p className='text-sm text-muted-foreground'>Isolated</p>
-                                        <p className='font-headline text-7xl'>{currentLetter.forms.isolated}</p>
-                                    </div>
-                                    <div className='text-center'>
-                                        <p className='text-sm text-muted-foreground'>Initial</p>
+                                        <p className='text-sm text-muted-foreground'>Beginning</p>
                                         <p className='font-headline text-7xl'>{currentLetter.forms.initial}</p>
                                     </div>
-                               </div>
-                               <div className='flex justify-around w-full'>
                                     <div className='text-center'>
-                                        <p className='text-sm text-muted-foreground'>Medial</p>
+                                        <p className='text-sm text-muted-foreground'>Middle</p>
                                         <p className='font-headline text-7xl'>{currentLetter.forms.medial}</p>
                                     </div>
                                     <div className='text-center'>
-                                        <p className='text-sm text-muted-foreground'>Final</p>
+                                        <p className='text-sm text-muted-foreground'>End</p>
                                         <p className='font-headline text-7xl'>{currentLetter.forms.final}</p>
                                     </div>
                                </div>
