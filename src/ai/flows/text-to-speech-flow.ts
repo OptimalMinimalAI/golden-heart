@@ -71,7 +71,7 @@ const textToSpeechFlow = ai.defineFlow(
                     },
                 },
             },
-            prompt: `Pronounce this: ${text}`,
+            prompt: text,
         });
 
         if (!media) {
