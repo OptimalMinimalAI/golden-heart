@@ -63,7 +63,7 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
           Dhikr Tracker
           <Button variant="ghost" size="icon" onClick={() => setCount(0)} aria-label="Reset Dhikr count"><Repeat className="w-4 h-4 text-muted-foreground" /></Button>
         </CardTitle>
-        <CardDescription>Minimum {goal.toLocaleString()}x remembrance a day.</CardDescription>
+        <CardDescription>Minimum {goal.toLocaleString()}x remembrance per day.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 justify-between flex-grow">
           <div className="space-y-4">
