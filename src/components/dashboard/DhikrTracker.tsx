@@ -20,7 +20,17 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
     const savedCount = localStorage.getItem('dhikrCount');
     const savedGoal = localStorage.getItem('dhikrGoal');
     if (savedCount) setCount(parseInt(savedCount, 10));
-    if (savedGoal) setGoal(parseInt(savedGoal, 10));
+    if (savedGoal) {
+        const savedGoalInt = parseInt(savedGoal, 10);
+        // Ensure the goal is at least 1000 if it was saved as something else before
+        if (savedGoalInt) {
+            setGoal(savedGoalInt);
+        } else {
+            setGoal(1000);
+        }
+    } else {
+        setGoal(1000);
+    }
   }, []);
 
   useEffect(() => {
