@@ -13,7 +13,7 @@ export default function Header() {
         <div className="flex items-center gap-3">
             <GoldenHeartIcon />
             <div className="flex items-baseline gap-3">
-                <h1 className="text-2xl font-bold font-headline text-primary-foreground tracking-wide">
+                <h1 className="text-2xl font-bold font-headline text-primary tracking-wide">
                     GOLDEN HEART HUB
                 </h1>
                 <p className="text-md text-muted-foreground font-headline">- In LOVE We Are Healed.</p>
