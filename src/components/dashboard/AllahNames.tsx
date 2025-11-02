@@ -21,8 +21,8 @@ export default function AllahNames({ className }: ComponentProps<'div'>) {
               <AccordionItem value={`item-${name.id}`} key={name.id}>
                 <AccordionTrigger className="text-lg hover:no-underline">
                   <div className="flex items-center justify-between w-full">
-                    <span className="font-medium text-left text-primary">{name.id}. {name.name}</span>
-                    <span className="font-headline text-2xl text-right text-primary-foreground" dir="rtl">{name.transliteration}</span>
+                    <span className="font-medium text-left">{name.id}. {name.name}</span>
+                    <span className="font-headline text-2xl text-right text-primary" dir="rtl">{name.transliteration}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="text-base text-muted-foreground pl-2">

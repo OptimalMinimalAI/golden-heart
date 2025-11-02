@@ -14,8 +14,8 @@ export default function StreakCounter({ streak, className }: StreakCounterProps)
         <CardTitle className="font-headline text-xl">Day Streak</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-1 pt-0">
-        <Flame className="w-20 h-20 text-primary drop-shadow-[0_2px_10px_rgba(212,175,55,0.7)]" />
-        <p className="text-6xl font-bold text-accent">{streak}</p>
+        <Flame className="w-20 h-20 text-primary drop-shadow-[0_2px_10px_rgba(252,191,73,0.5)]" />
+        <p className="text-6xl font-bold text-primary">{streak}</p>
         <p className="text-muted-foreground -mt-2">{streak === 1 ? "day" : "days"}</p>
       </CardContent>
     </Card>
