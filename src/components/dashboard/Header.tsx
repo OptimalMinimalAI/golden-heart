@@ -1,4 +1,4 @@
-import { LogIn, Moon } from "lucide-react";
+import { LogIn, Moon, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const GoldenHeartIcon = () => (
@@ -19,7 +19,7 @@ export default function Header() {
                 <p className="text-md text-muted-foreground font-headline">- In LOVE We Are Healed.</p>
             </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="w-9 h-9">
                 <Moon className="h-5 w-5" />
                 <span className="sr-only">Toggle Theme</span>
@@ -27,6 +27,10 @@ export default function Header() {
             <Button variant="outline">
               <LogIn className="mr-2 h-4 w-4" />
               Log in
+            </Button>
+            <Button variant="secondary">
+                <User className="mr-2 h-4 w-4" />
+                Guest
             </Button>
         </div>
     </header>
