@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -14,16 +15,23 @@ type QuizType = 'letter-to-transliteration' | 'transliteration-to-letter';
 
 export default function FoundationalLanguage({ className }: ComponentProps<'div'>) {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [isFlipped, setIsFlipped] = useState(false);
     const [isQuizTypeDialogOpen, setIsQuizTypeDialogOpen] = useState(false);
     const [activeQuiz, setActiveQuiz] = useState<QuizType | null>(null);
 
     const handleNext = () => {
+        setIsFlipped(false);
         setCurrentIndex((prev) => (prev + 1) % ALPHABET.length);
     };
 
     const handlePrev = () => {
+        setIsFlipped(false);
         setCurrentIndex((prev) => (prev - 1 + ALPHABET.length) % ALPHABET.length);
     };
+
+    const handleFlip = () => {
+        setIsFlipped(!isFlipped);
+    }
 
     const startQuiz = (type: QuizType) => {
         setIsQuizTypeDialogOpen(false);
@@ -43,35 +51,61 @@ export default function FoundationalLanguage({ className }: ComponentProps<'div'
                     <CardTitle className="font-headline text-2xl flex items-center gap-2">
                         <BookText /> Foundational Language
                     </CardTitle>
-                    <CardDescription>Learn the alphabet through sacred words.</CardDescription>
+                    <CardDescription>Learn the alphabet through sacred words. Click a card to see its forms.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col flex-grow items-center justify-between">
-                    <div className="w-full flex-grow flex items-center justify-center relative">
+                    <div className="w-full flex-grow flex items-center justify-center relative [perspective:1000px]">
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={handlePrev}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-background/50 hover:bg-background/80"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-background/50 hover:bg-background/80 z-10"
                         >
                             <ArrowLeft className="h-5 w-5" />
                             <span className="sr-only">Previous Letter</span>
                         </Button>
 
-                        <div className="text-center w-[300px] h-[350px] p-6 bg-secondary/30 rounded-lg flex flex-col justify-center items-center">
-                            <p className="text-sm text-muted-foreground">{currentLetter.transliteration}</p>
-                            <p className="font-headline text-8xl my-4 text-primary-foreground">{currentLetter.letter}</p>
-                            <p className="font-bold text-2xl text-primary">{currentLetter.name}</p>
-                            <div className="border-t border-border w-1/2 my-4"></div>
-                            <p className="font-headline text-3xl text-primary" dir="rtl">{currentLetter.exampleWord}</p>
-                            <p className="font-semibold text-lg">{currentLetter.exampleTranslation}</p>
-                            <p className="text-muted-foreground">"{currentLetter.exampleMeaning}"</p>
+                        <div className={cn("relative w-[300px] h-[350px] transition-transform duration-700 [transform-style:preserve-3d]", isFlipped && "[transform:rotateY(180deg)]")}>
+                            {/* Front of Card */}
+                            <div onClick={handleFlip} className="absolute w-full h-full p-6 bg-secondary/30 rounded-lg flex flex-col justify-center items-center cursor-pointer [backface-visibility:hidden]">
+                                <p className="text-sm text-muted-foreground">{currentLetter.transliteration}</p>
+                                <p className="font-headline text-8xl my-4 text-primary-foreground">{currentLetter.letter}</p>
+                                <p className="font-bold text-2xl text-primary">{currentLetter.name}</p>
+                                <div className="border-t border-border w-1/2 my-4"></div>
+                                <p className="font-headline text-3xl text-primary" dir="rtl">{currentLetter.exampleWord}</p>
+                                <p className="font-semibold text-lg">{currentLetter.exampleTranslation}</p>
+                                <p className="text-muted-foreground text-sm">"{currentLetter.exampleMeaning}"</p>
+                            </div>
+                            {/* Back of Card */}
+                            <div onClick={handleFlip} className="absolute w-full h-full p-6 bg-secondary/50 rounded-lg flex flex-col justify-around items-center cursor-pointer [transform:rotateY(180deg)] [backface-visibility:hidden]">
+                               <div className='flex justify-around w-full'>
+                                    <div className='text-center'>
+                                        <p className='text-sm text-muted-foreground'>Isolated</p>
+                                        <p className='font-headline text-7xl'>{currentLetter.forms.isolated}</p>
+                                    </div>
+                                    <div className='text-center'>
+                                        <p className='text-sm text-muted-foreground'>Initial</p>
+                                        <p className='font-headline text-7xl'>{currentLetter.forms.initial}</p>
+                                    </div>
+                               </div>
+                               <div className='flex justify-around w-full'>
+                                    <div className='text-center'>
+                                        <p className='text-sm text-muted-foreground'>Medial</p>
+                                        <p className='font-headline text-7xl'>{currentLetter.forms.medial}</p>
+                                    </div>
+                                    <div className='text-center'>
+                                        <p className='text-sm text-muted-foreground'>Final</p>
+                                        <p className='font-headline text-7xl'>{currentLetter.forms.final}</p>
+                                    </div>
+                               </div>
+                            </div>
                         </div>
 
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={handleNext}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-background/50 hover:bg-background/80"
+                            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-background/50 hover:bg-background/80 z-10"
                             >
                             <ArrowRight className="h-5 w-5" />
                             <span className="sr-only">Next Letter</span>

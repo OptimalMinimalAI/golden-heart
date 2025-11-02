@@ -1,3 +1,4 @@
+
 export const PRAYER_NAMES = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
 export const ALLAH_NAMES = [
@@ -102,229 +103,160 @@ export const ALLAH_NAMES = [
   { "id": 99, "name": "Aṣ-Ṣabūr", "transliteration": "الصَّبُورُ", "en": "The Most Patient" }
 ];
 
-export const ALPHABET = [
+export interface AlphabetLetter {
+    letter: string;
+    name: string;
+    transliteration: string;
+    exampleWord: string;
+    exampleTranslation: string;
+    exampleMeaning: string;
+    forms: {
+      isolated: string;
+      initial: string;
+      medial: string;
+      final: string;
+    };
+  }
+
+export const ALPHABET: AlphabetLetter[] = [
     {
-      "letter": "ا",
-      "name": "Alif",
-      "transliteration": "a, ā",
-      "exampleWord": "ٱلْفَاتِحَة",
-      "exampleTranslation": "Al-Fatiha",
-      "exampleMeaning": "The Opening"
+      "letter": "ا", "name": "Alif", "transliteration": "a, ā",
+      "exampleWord": "ٱلْفَاتِحَة", "exampleTranslation": "Al-Fatiha", "exampleMeaning": "The Opening",
+      "forms": { "isolated": "ا", "initial": "ا", "medial": "ـا", "final": "ـا" }
     },
     {
-      "letter": "ب",
-      "name": "Ba",
-      "transliteration": "b",
-      "exampleWord": "بِسْمِ",
-      "exampleTranslation": "Bismillah",
-      "exampleMeaning": "In the name of"
+      "letter": "ب", "name": "Ba", "transliteration": "b",
+      "exampleWord": "بِسْمِ", "exampleTranslation": "Bismillah", "exampleMeaning": "In the name of",
+      "forms": { "isolated": "ب", "initial": "بـ", "medial": "ـبـ", "final": "ـب" }
     },
     {
-      "letter": "ت",
-      "name": "Ta",
-      "transliteration": "t",
-      "exampleWord": "تَبَّتْ",
-      "exampleTranslation": "Tabbat",
-      "exampleMeaning": "Perish"
+      "letter": "ت", "name": "Ta", "transliteration": "t",
+      "exampleWord": "تَبَّتْ", "exampleTranslation": "Tabbat", "exampleMeaning": "Perish",
+      "forms": { "isolated": "ت", "initial": "تـ", "medial": "ـتـ", "final": "ـت" }
     },
     {
-      "letter": "ث",
-      "name": "Tha",
-      "transliteration": "th",
-      "exampleWord": "ثَمَرَةٍ",
-      "exampleTranslation": "Thamaratin",
-      "exampleMeaning": "A fruit"
+      "letter": "ث", "name": "Tha", "transliteration": "th",
+      "exampleWord": "ثَمَرَةٍ", "exampleTranslation": "Thamaratin", "exampleMeaning": "A fruit",
+      "forms": { "isolated": "ث", "initial": "ثـ", "medial": "ـثـ", "final": "ـث" }
     },
     {
-      "letter": "ج",
-      "name": "Jim",
-      "transliteration": "j",
-      "exampleWord": "جَاءَ",
-      "exampleTranslation": "Jā'a",
-      "exampleMeaning": "He came"
+      "letter": "ج", "name": "Jim", "transliteration": "j",
+      "exampleWord": "جَاءَ", "exampleTranslation": "Jā'a", "exampleMeaning": "He came",
+      "forms": { "isolated": "ج", "initial": "جـ", "medial": "ـجـ", "final": "ـج" }
     },
     {
-      "letter": "ح",
-      "name": "Ha",
-      "transliteration": "ḥ",
-      "exampleWord": "الْحَمْدُ",
-      "exampleTranslation": "Al-Hamdu",
-      "exampleMeaning": "The praise"
+      "letter": "ح", "name": "Ha", "transliteration": "ḥ",
+      "exampleWord": "الْحَمْدُ", "exampleTranslation": "Al-Hamdu", "exampleMeaning": "The praise",
+      "forms": { "isolated": "ح", "initial": "حـ", "medial": "ـحـ", "final": "ـح" }
     },
     {
-      "letter": "خ",
-      "name": "Kha",
-      "transliteration": "kh",
-      "exampleWord": "خَلَقَ",
-      "exampleTranslation": "Khalaqa",
-      "exampleMeaning": "He created"
+      "letter": "خ", "name": "Kha", "transliteration": "kh",
+      "exampleWord": "خَلَقَ", "exampleTranslation": "Khalaqa", "exampleMeaning": "He created",
+      "forms": { "isolated": "خ", "initial": "خـ", "medial": "ـخـ", "final": "ـخ" }
     },
     {
-      "letter": "د",
-      "name": "Dal",
-      "transliteration": "d",
-      "exampleWord": "الدِّينِ",
-      "exampleTranslation": "Ad-Dīn",
-      "exampleMeaning": "The religion"
+      "letter": "د", "name": "Dal", "transliteration": "d",
+      "exampleWord": "الدِّينِ", "exampleTranslation": "Ad-Dīn", "exampleMeaning": "The religion",
+      "forms": { "isolated": "د", "initial": "د", "medial": "ـد", "final": "ـد" }
     },
     {
-      "letter": "ذ",
-      "name": "Dhal",
-      "transliteration": "dh",
-      "exampleWord": "ذَٰلِكَ",
-      "exampleTranslation": "Dhālika",
-      "exampleMeaning": "That"
+      "letter": "ذ", "name": "Dhal", "transliteration": "dh",
+      "exampleWord": "ذَٰلِكَ", "exampleTranslation": "Dhālika", "exampleMeaning": "That",
+      "forms": { "isolated": "ذ", "initial": "ذ", "medial": "ـذ", "final": "ـذ" }
     },
     {
-      "letter": "ر",
-      "name": "Ra",
-      "transliteration": "r",
-      "exampleWord": "رَبِّ",
-      "exampleTranslation": "Rabb",
-      "exampleMeaning": "Lord"
+      "letter": "ر", "name": "Ra", "transliteration": "r",
+      "exampleWord": "رَبِّ", "exampleTranslation": "Rabb", "exampleMeaning": "Lord",
+      "forms": { "isolated": "ر", "initial": "ر", "medial": "ـر", "final": "ـر" }
     },
     {
-      "letter": "ز",
-      "name": "Zain",
-      "transliteration": "z",
-      "exampleWord": "زُلْزِلَتِ",
-      "exampleTranslation": "Zulzilat",
-      "exampleMeaning": "Is shaken"
+      "letter": "ز", "name": "Zain", "transliteration": "z",
+      "exampleWord": "زُلْزِلَتِ", "exampleTranslation": "Zulzilat", "exampleMeaning": "Is shaken",
+      "forms": { "isolated": "ز", "initial": "ز", "medial": "ـز", "final": "ـز" }
     },
     {
-      "letter": "س",
-      "name": "Sin",
-      "transliteration": "s",
-      "exampleWord": "سَبَّحَ",
-      "exampleTranslation": "Sabbaḥa",
-      "exampleMeaning": "He glorified"
+      "letter": "س", "name": "Sin", "transliteration": "s",
+      "exampleWord": "سَبَّحَ", "exampleTranslation": "Sabbaḥa", "exampleMeaning": "He glorified",
+      "forms": { "isolated": "س", "initial": "سـ", "medial": "ـسـ", "final": "ـس" }
     },
     {
-      "letter": "ش",
-      "name": "Shin",
-      "transliteration": "sh",
-      "exampleWord": "شَمْسِ",
-      "exampleTranslation": "Shams",
-      "exampleMeaning": "Sun"
+      "letter": "ش", "name": "Shin", "transliteration": "sh",
+      "exampleWord": "شَمْسِ", "exampleTranslation": "Shams", "exampleMeaning": "Sun",
+      "forms": { "isolated": "ش", "initial": "شـ", "medial": "ـشـ", "final": "ـش" }
     },
     {
-      "letter": "ص",
-      "name": "Sad",
-      "transliteration": "ṣ",
-      "exampleWord": "صِرَاطَ",
-      "exampleTranslation": "Ṣirāṭa",
-      "exampleMeaning": "Path"
+      "letter": "ص", "name": "Sad", "transliteration": "ṣ",
+      "exampleWord": "صِرَاطَ", "exampleTranslation": "Ṣirāṭa", "exampleMeaning": "Path",
+      "forms": { "isolated": "ص", "initial": "صـ", "medial": "ـصـ", "final": "ـص" }
     },
     {
-      "letter": "ض",
-      "name": "Dad",
-      "transliteration": "ḍ",
-      "exampleWord": "ضُحَىٰ",
-      "exampleTranslation": "Ḍuḥā",
-      "exampleMeaning": "Morning brightness"
+      "letter": "ض", "name": "Dad", "transliteration": "ḍ",
+      "exampleWord": "ضُحَىٰ", "exampleTranslation": "Ḍuḥā", "exampleMeaning": "Morning brightness",
+      "forms": { "isolated": "ض", "initial": "ضـ", "medial": "ـضـ", "final": "ـض" }
     },
     {
-      "letter": "ط",
-      "name": "Ta",
-      "transliteration": "ṭ",
-      "exampleWord": "طَيْرًا",
-      "exampleTranslation": "Ṭayran",
-      "exampleMeaning": "Birds"
+      "letter": "ط", "name": "Ta", "transliteration": "ṭ",
+      "exampleWord": "طَيْرًا", "exampleTranslation": "Ṭayran", "exampleMeaning": "Birds",
+      "forms": { "isolated": "ط", "initial": "طـ", "medial": "ـطـ", "final": "ـط" }
     },
     {
-      "letter": "ظ",
-      "name": "Dha",
-      "transliteration": "ẓ",
-      "exampleWord": "ظَهَرَ",
-      "exampleTranslation": "Ẓahara",
-      "exampleMeaning": "He appeared"
+      "letter": "ظ", "name": "Dha", "transliteration": "ẓ",
+      "exampleWord": "ظَهَرَ", "exampleTranslation": "Ẓahara", "exampleMeaning": "He appeared",
+      "forms": { "isolated": "ظ", "initial": "ظـ", "medial": "ـظـ", "final": "ـظ" }
     },
     {
-      "letter": "ع",
-      "name": "Ain",
-      "transliteration": "ʿ",
-      "exampleWord": "عَلَىٰ",
-      "exampleTranslation": "'Alā",
-      "exampleMeaning": "Upon"
+      "letter": "ع", "name": "Ain", "transliteration": "ʿ",
+      "exampleWord": "عَلَىٰ", "exampleTranslation": "'Alā", "exampleMeaning": "Upon",
+      "forms": { "isolated": "ع", "initial": "عـ", "medial": "ـعـ", "final": "ـع" }
     },
     {
-      "letter": "غ",
-      "name": "Ghain",
-      "transliteration": "gh",
-      "exampleWord": "غَيْرِ",
-      "exampleTranslation": "Ghayri",
-      "exampleMeaning": "Other than"
+      "letter": "غ", "name": "Ghain", "transliteration": "gh",
+      "exampleWord": "غَيْرِ", "exampleTranslation": "Ghayri", "exampleMeaning": "Other than",
+      "forms": { "isolated": "غ", "initial": "غـ", "medial": "ـغـ", "final": "ـغ" }
     },
     {
-      "letter": "ف",
-      "name": "Fa",
-      "transliteration": "f",
-      "exampleWord": "فِي",
-      "exampleTranslation": "Fī",
-      "exampleMeaning": "In"
+      "letter": "ف", "name": "Fa", "transliteration": "f",
+      "exampleWord": "فِي", "exampleTranslation": "Fī", "exampleMeaning": "In",
+      "forms": { "isolated": "ف", "initial": "فـ", "medial": "ـفـ", "final": "ـف" }
     },
     {
-      "letter": "ق",
-      "name": "Qaf",
-      "transliteration": "q",
-      "exampleWord": "قُلْ",
-      "exampleTranslation": "Qul",
-      "exampleMeaning": "Say"
+      "letter": "ق", "name": "Qaf", "transliteration": "q",
+      "exampleWord": "قُلْ", "exampleTranslation": "Qul", "exampleMeaning": "Say",
+      "forms": { "isolated": "ق", "initial": "قـ", "medial": "ـقـ", "final": "ـق" }
     },
     {
-      "letter": "ك",
-      "name": "Kaf",
-      "transliteration": "k",
-      "exampleWord": "كِتَابُ",
-      "exampleTranslation": "Kitābu",
-      "exampleMeaning": "Book"
+      "letter": "ك", "name": "Kaf", "transliteration": "k",
+      "exampleWord": "كِتَابُ", "exampleTranslation": "Kitābu", "exampleMeaning": "Book",
+      "forms": { "isolated": "ك", "initial": "كـ", "medial": "ـكـ", "final": "ـك" }
     },
     {
-      "letter": "ل",
-      "name": "Lam",
-      "transliteration": "l",
-      "exampleWord": "لِلَّهِ",
-      "exampleTranslation": "Lillāhi",
-      "exampleMeaning": "To Allah"
+      "letter": "ل", "name": "Lam", "transliteration": "l",
+      "exampleWord": "لِلَّهِ", "exampleTranslation": "Lillāhi", "exampleMeaning": "To Allah",
+      "forms": { "isolated": "ل", "initial": "لـ", "medial": "ـلـ", "final": "ـل" }
     },
     {
-      "letter": "م",
-      "name": "Mim",
-      "transliteration": "m",
-      "exampleWord": "مَالِكِ",
-      "exampleTranslation": "Māliki",
-      "exampleMeaning": "Master"
+      "letter": "م", "name": "Mim", "transliteration": "m",
+      "exampleWord": "مَالِكِ", "exampleTranslation": "Māliki", "exampleMeaning": "Master",
+      "forms": { "isolated": "م", "initial": "مـ", "medial": "ـمـ", "final": "ـم" }
     },
     {
-      "letter": "ن",
-      "name": "Nun",
-      "transliteration": "n",
-      "exampleWord": "نَاسِ",
-      "exampleTranslation": "Nās",
-      "exampleMeaning": "Mankind"
+      "letter": "ن", "name": "Nun", "transliteration": "n",
+      "exampleWord": "نَاسِ", "exampleTranslation": "Nās", "exampleMeaning": "Mankind",
+      "forms": { "isolated": "ن", "initial": "نـ", "medial": "ـنـ", "final": "ـن" }
     },
     {
-      "letter": "ه",
-      "name": "Ha",
-      "transliteration": "h",
-      "exampleWord": "هُوَ",
-      "exampleTranslation": "Huwa",
-      "exampleMeaning": "He"
+      "letter": "ه", "name": "Ha", "transliteration": "h",
+      "exampleWord": "هُوَ", "exampleTranslation": "Huwa", "exampleMeaning": "He",
+      "forms": { "isolated": "ه", "initial": "هـ", "medial": "ـهـ", "final": "ـه" }
     },
     {
-      "letter": "و",
-      "name": "Waw",
-      "transliteration": "w, ū",
-      "exampleWord": "وَ",
-      "exampleTranslation": "Wa",
-      "exampleMeaning": "And"
+      "letter": "و", "name": "Waw", "transliteration": "w, ū",
+      "exampleWord": "وَ", "exampleTranslation": "Wa", "exampleMeaning": "And",
+      "forms": { "isolated": "و", "initial": "و", "medial": "ـو", "final": "ـو" }
     },
     {
-      "letter": "ي",
-      "name": "Ya",
-      "transliteration": "y, ī",
-      "exampleWord": "يَوْمِ",
-      "exampleTranslation": "Yawmi",
-      "exampleMeaning": "Day"
+      "letter": "ي", "name": "Ya", "transliteration": "y, ī",
+      "exampleWord": "يَوْمِ", "exampleTranslation": "Yawmi", "exampleMeaning": "Day",
+      "forms": { "isolated": "ي", "initial": "يـ", "medial": "ـيـ", "final": "ـي" }
     }
 ];
