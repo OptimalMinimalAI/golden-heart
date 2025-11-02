@@ -127,8 +127,8 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                     <ScrollArea className='flex-grow pr-4 -mr-4'>
                         <div className="space-y-4">
                             {surahs.map((surah) => (
-                                <div key={surah.id} className="bg-secondary/30 rounded-lg p-4">
-                                    <div onClick={() => openSurahDialog(surah.id)} className="cursor-pointer">
+                                <div key={surah.id} className="bg-secondary/30 rounded-lg p-4 flex flex-col">
+                                    <div onClick={() => openSurahDialog(surah.id)} className="cursor-pointer flex-grow">
                                         <p className="font-bold text-lg">{surah.name}</p>
                                         <p className="text-muted-foreground text-sm">{surah.description}</p>
                                     </div>
@@ -142,7 +142,7 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                                                 Mastered
                                             </label>
                                         </div>
-                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0 h-auto w-auto px-1" onClick={() => handleDeleteSurah(surah.id)}>
+                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0 h-auto w-auto px-1" onClick={(e) => { e.stopPropagation(); handleDeleteSurah(surah.id); }}>
                                             <X className="w-4 h-4" />
                                         </Button>
                                     </div>
@@ -167,15 +167,15 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                                     <DialogTitle className="text-2xl font-headline">{selectedSurah.name}</DialogTitle>
                                     <DialogDescription>{selectedSurah.translation}</DialogDescription>
                                 </div>
-                                <p className="font-headline text-3xl text-primary/80" dir="rtl">{selectedSurah.arabicName}</p>
+                                <p className="font-headline text-3xl text-primary" dir="rtl">{selectedSurah.arabicName}</p>
                             </div>
                         </DialogHeader>
                         <ScrollArea className="flex-grow pr-6 -mr-6">
                             <div className="space-y-4">
                                 {selectedSurah.verses.map((verse) => (
                                     <div key={verse.id} className="p-4 rounded-lg bg-secondary/40 border border-border/50">
-                                        <p className="text-2xl font-headline text-right text-primary-foreground mb-4" dir="rtl">{verse.arabic}</p>
-                                        <p className="font-semibold text-primary">{verse.transliteration}</p>
+                                        <p className="text-2xl font-headline text-right text-primary mb-4" dir="rtl">{verse.arabic}</p>
+                                        <p className="font-semibold text-primary-foreground">{verse.transliteration}</p>
                                         <p className="text-muted-foreground mt-1">{verse.id}. {verse.translation}</p>
                                     </div>
                                 ))}
@@ -208,6 +208,9 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                                 <div>
                                     <p className="font-bold">({surah.id}) {surah.name}</p>
                                     <p className="text-sm text-muted-foreground">{surah.translation}</p>
+                                </div>
+                                <div className='text-right'>
+                                     <p className="font-headline text-xl text-primary" dir="rtl">{surah.arabic}</p>
                                 </div>
                                 <Button size="icon" variant="ghost" onClick={() => handleAddSurah(surah)}>
                                     <Plus className="h-5 w-5" />

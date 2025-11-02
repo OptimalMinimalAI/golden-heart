@@ -45,7 +45,7 @@ export default function FoundationalLanguage({ className }: ComponentProps<'div'
                     <p className="font-headline text-8xl my-4 text-primary-foreground">{currentLetter.letter}</p>
                     <p className="font-bold text-2xl text-primary">{currentLetter.name}</p>
                     <div className="border-t border-border w-1/2 my-4"></div>
-                    <p className="font-headline text-3xl text-primary/80" dir="rtl">{currentLetter.exampleWord}</p>
+                    <p className="font-headline text-3xl text-primary" dir="rtl">{currentLetter.exampleWord}</p>
                     <p className="font-semibold text-lg">{currentLetter.exampleTranslation}</p>
                     <p className="text-muted-foreground">"{currentLetter.exampleMeaning}"</p>
                 </div>

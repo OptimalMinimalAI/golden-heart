@@ -42,31 +42,36 @@ export default function AllahNames({ className }: ComponentProps<'div'>) {
                 <p className="font-bold text-lg">{name.id}. {name.name}</p>
                 <p className="text-muted-foreground text-sm mt-1">{name.en}</p>
               </div>
-              <p className="font-headline text-2xl text-right text-primary/80" dir="rtl">{name.transliteration}</p>
+              <p className="font-headline text-2xl text-right text-primary" dir="rtl">{name.transliteration}</p>
             </div>
           ))}
         </div>
         
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={handlePrevPage} 
-          disabled={currentPage === 1}
-          className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-background/50 hover:bg-background/80 disabled:opacity-30"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span className="sr-only">Previous Page</span>
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={handleNextPage} 
-          disabled={currentPage === totalPages}
-          className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-background/50 hover:bg-background/80 disabled:opacity-30"
-        >
-          <ArrowRight className="h-5 w-5" />
-          <span className="sr-only">Next Page</span>
-        </Button>
+        <div className="absolute inset-x-0 bottom-0 flex justify-center pt-4">
+            <div className="flex items-center gap-4">
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handlePrevPage} 
+                    disabled={currentPage === 1}
+                    className="rounded-full bg-background/50 hover:bg-background/80 disabled:opacity-30"
+                    >
+                    <ArrowLeft className="h-5 w-5" />
+                    <span className="sr-only">Previous Page</span>
+                </Button>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handleNextPage} 
+                    disabled={currentPage === totalPages}
+                    className="rounded-full bg-background/50 hover:bg-background/80 disabled:opacity-30"
+                    >
+                    <ArrowRight className="h-5 w-5" />
+                    <span className="sr-only">Next Page</span>
+                </Button>
+            </div>
+        </div>
+
       </CardContent>
     </Card>
   );
