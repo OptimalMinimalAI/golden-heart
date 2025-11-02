@@ -50,11 +50,7 @@ export default function DashboardPage() {
   }, [isClient, selectedDate]);
 
   const handlePrayerToggle = (prayerName: string) => {
-    const todayKey = new Date().toDateString();
-    if (selectedDate.toDateString() !== todayKey) {
-        // block toggling for past dates.
-        return;
-    }
+    const dateKey = selectedDate.toDateString();
     
     const newCompletedPrayers = new Set(completedPrayers);
     if (newCompletedPrayers.has(prayerName)) {
@@ -64,11 +60,14 @@ export default function DashboardPage() {
     }
     setCompletedPrayers(newCompletedPrayers);
     
-    const newHistory = { ...prayerHistory, [todayKey]: Array.from(newCompletedPrayers) };
+    const newHistory = { ...prayerHistory, [dateKey]: Array.from(newCompletedPrayers) };
     setPrayerHistory(newHistory);
     localStorage.setItem('prayerHistory', JSON.stringify(newHistory));
 
-    updateStreak(newCompletedPrayers);
+    // Only update streak if the change is for today
+    if(dateKey === new Date().toDateString()) {
+      updateStreak(newCompletedPrayers);
+    }
   };
 
   const updateStreak = (currentPrayers: Set<string>) => {

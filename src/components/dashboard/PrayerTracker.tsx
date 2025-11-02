@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import type { ComponentProps } from 'react';
 import { cn } from "@/lib/utils";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
-import { Flame, Calendar as CalendarIcon, Save } from "lucide-react";
+import { Flame, Calendar as CalendarIcon, Save, ArrowLeft, ArrowRight } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
@@ -46,12 +46,22 @@ export default function PrayerTracker({ prayers, completedPrayers, onTogglePraye
   const { toast } = useToast();
 
   const handleSave = () => {
-    // The main logic in page.tsx already saves on toggle.
-    // This button can provide user feedback.
     toast({
       title: "Progress Saved",
-      description: "Your prayer entries for today have been saved.",
+      description: `Your prayer entries for ${formattedDate} have been saved.`,
     });
+  };
+
+  const handlePrevDay = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(selectedDate.getDate() - 1);
+    onDateSelect(newDate);
+  };
+
+  const handleNextDay = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(selectedDate.getDate() + 1);
+    onDateSelect(newDate);
   };
 
   const completedDays = Object.keys(prayerHistory).filter(dateStr => {
@@ -63,14 +73,20 @@ export default function PrayerTracker({ prayers, completedPrayers, onTogglePraye
       <CardHeader className="flex flex-row items-start justify-between">
         <div>
             <CardTitle className="font-headline text-2xl flex items-center">Daily Prayer Counter</CardTitle>
-            <CardDescription>{formattedDate}</CardDescription>
+            <div className="flex items-center gap-2 mt-1">
+                <Button variant="ghost" size="icon" onClick={handlePrevDay} className="h-7 w-7 rounded-full">
+                    <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <CardDescription className="w-40 text-center">{formattedDate}</CardDescription>
+                 <Button variant="ghost" size="icon" onClick={handleNextDay} disabled={isToday} className="h-7 w-7 rounded-full">
+                    <ArrowRight className="h-4 w-4" />
+                </Button>
+            </div>
         </div>
         <div className="flex items-center gap-2">
-            {isToday && (
-                 <Button variant="outline" size="icon" onClick={handleSave}>
-                    <Save className="h-5 w-5" />
-                 </Button>
-            )}
+            <Button variant="outline" size="icon" onClick={handleSave}>
+                <Save className="h-5 w-5" />
+            </Button>
             <Popover>
                 <PopoverTrigger asChild>
                     <Button variant="outline" size="icon">
@@ -89,6 +105,7 @@ export default function PrayerTracker({ prayers, completedPrayers, onTogglePraye
                                 position: 'relative',
                             }
                         }}
+                        disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
                         components={{
                             DayContent: (props) => {
                                 const isCompleted = completedDays.some(d => d.toDateString() === props.date.toDateString());
@@ -114,9 +131,8 @@ export default function PrayerTracker({ prayers, completedPrayers, onTogglePraye
                 <button
                     key={prayer}
                     onClick={() => onTogglePrayer(prayer)}
-                    className={cn("flex flex-col items-center gap-2 group", !isToday && "cursor-not-allowed opacity-70")}
+                    className="flex flex-col items-center gap-2 group"
                     aria-pressed={isCompleted}
-                    disabled={!isToday}
                 >
                     <PrayerStarIcon filled={isCompleted} />
                     <span className={cn(
