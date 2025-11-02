@@ -69,7 +69,7 @@ export default function FoundationalLanguage({ className }: ComponentProps<'div'
                             {/* Front of Card */}
                             <div onClick={handleFlip} className="absolute w-full h-full p-6 bg-secondary/30 rounded-lg flex flex-col justify-center items-center cursor-pointer [backface-visibility:hidden]">
                                 <p className="text-sm text-muted-foreground">{currentLetter.transliteration}</p>
-                                <p className="font-headline text-8xl my-4 text-primary-foreground">{currentLetter.letter}</p>
+                                <p className="font-headline text-8xl my-4 text-foreground">{currentLetter.letter}</p>
                                 <p className="font-bold text-2xl text-primary">{currentLetter.name}</p>
                                 <div className="border-t border-border w-1/2 my-4"></div>
                                 <p className="font-headline text-3xl text-primary" dir="rtl">{currentLetter.exampleWord}</p>
