@@ -78,7 +78,7 @@ export const ALLAH_NAMES = [
   { "id": 75, "name": "Al-Batin", "transliteration": "الباطن", "en": "The Hidden One" },
   { "id": 76, "name": "Al-Wali", "transliteration": "الوالي", "en": "The Protecting Friend" },
   { "id": 77, "name": "Al-Muta'ali", "transliteration": "المتعالي", "en": "The Supreme One" },
-  { "id": 80, "name": "Al-Barr", "transliteration": "البر", "en": "The Doer of Good" },
+  { "id": 78, "name": "Al-Barr", "transliteration": "البر", "en": "The Doer of Good" },
   { "id": 79, "name": "At-Tawwab", "transliteration": "التواب", "en": "The Guide to Repentance" },
   { "id": 80, "name": "Al-Muntaqim", "transliteration": "المنتقم", "en": "The Avenger" },
   { "id": 81, "name": "Al-Afuww", "transliteration": "العفو", "en": "The Forgiver" },
