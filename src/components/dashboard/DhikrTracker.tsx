@@ -32,13 +32,21 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
       setCount(dhikrRecord.count || 0);
       setGoal(dhikrRecord.goal || 1000);
     } else {
-      setCount(0);
-      setGoal(1000);
+        // If not logged in, try to get from local storage
+        if (!user) {
+            const localCount = localStorage.getItem('dhikrCount');
+            const localGoal = localStorage.getItem('dhikrGoal');
+            if (localCount) setCount(JSON.parse(localCount));
+            if (localGoal) setGoal(JSON.parse(localGoal));
+        } else {
+            setCount(0);
+            setGoal(1000);
+        }
     }
-  }, [dhikrRecord]);
+  }, [dhikrRecord, user]);
 
   const updateDhikrRecord = (newCount: number, newGoal?: number) => {
-    if (dhikrRecordRef) {
+    if (user && dhikrRecordRef) {
       const dataToSet = {
         count: newCount,
         goal: newGoal ?? goal,
@@ -47,6 +55,10 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
         dhikrName: 'General'
       };
       setDocumentNonBlocking(dhikrRecordRef, dataToSet, { merge: true });
+    } else {
+        // save to local storage if not logged in
+        localStorage.setItem('dhikrCount', JSON.stringify(newCount));
+        if (newGoal) localStorage.setItem('dhikrGoal', JSON.stringify(newGoal));
     }
     setCount(newCount);
     if(newGoal) setGoal(newGoal);
@@ -80,7 +92,7 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center justify-between">
           Advanced Dhikr Goal
-          <Button variant="ghost" size="icon" onClick={handleReset} disabled={!user} aria-label="Reset Dhikr count"><Repeat className="w-4 h-4 text-muted-foreground" /></Button>
+          <Button variant="ghost" size="icon" onClick={handleReset} aria-label="Reset Dhikr count"><Repeat className="w-4 h-4 text-muted-foreground" /></Button>
         </CardTitle>
         <CardDescription>Minimum 1,000x remembrance a day.</CardDescription>
       </CardHeader>
@@ -101,8 +113,8 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
             
             <div className="flex items-center gap-2">
                 <div className="flex justify-center gap-2">
-                    <Button variant="outline" size="icon" onClick={handleIncrement} disabled={!user} aria-label="Increment Dhikr count by 100"><Plus /></Button>
-                    <Button variant="outline" size="icon" onClick={handleDecrement} disabled={!user} aria-label="Decrement Dhikr count by 100"><Minus /></Button>
+                    <Button variant="outline" size="icon" onClick={handleIncrement} aria-label="Increment Dhikr count by 100"><Plus /></Button>
+                    <Button variant="outline" size="icon" onClick={handleDecrement} aria-label="Decrement Dhikr count by 100"><Minus /></Button>
                 </div>
                  <form onSubmit={handleCustomAmountSubmit} className="flex gap-2 flex-grow">
                   <Input 
@@ -112,10 +124,9 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
                     onChange={(e) => setCustomAmount(e.target.value)}
                     placeholder="Add custom amount"
                     className="bg-card-foreground/5"
-                    disabled={!user}
                     aria-label="Custom Dhikr amount"
                   />
-                  <Button type="submit" disabled={!user}>Add</Button>
+                  <Button type="submit">Add</Button>
                 </form>
             </div>
           </div>
