@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import type { ComponentProps } from 'react';
 import { cn } from "@/lib/utils";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
-import { Flame, Calendar as CalendarIcon } from "lucide-react";
+import { Flame, Calendar as CalendarIcon, Save } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
 import type { PrayerHistory } from "@/app/page";
+import { useToast } from "@/hooks/use-toast";
 
 const PrayerStarIcon = ({ filled }: { filled: boolean }) => (
   <svg
@@ -42,6 +43,16 @@ interface PrayerTrackerProps extends ComponentProps<'div'> {
 export default function PrayerTracker({ prayers, completedPrayers, onTogglePrayer, streak, prayerHistory, selectedDate, onDateSelect, className }: PrayerTrackerProps) {
   const formattedDate = useFormattedDate(selectedDate);
   const isToday = selectedDate.toDateString() === new Date().toDateString();
+  const { toast } = useToast();
+
+  const handleSave = () => {
+    // The main logic in page.tsx already saves on toggle.
+    // This button can provide user feedback.
+    toast({
+      title: "Progress Saved",
+      description: "Your prayer entries for today have been saved.",
+    });
+  };
 
   const completedDays = Object.keys(prayerHistory).filter(dateStr => {
     return prayerHistory[dateStr].length >= prayers.length;
@@ -54,38 +65,45 @@ export default function PrayerTracker({ prayers, completedPrayers, onTogglePraye
             <CardTitle className="font-headline text-2xl flex items-center">Daily Prayer Counter</CardTitle>
             <CardDescription>{formattedDate}</CardDescription>
         </div>
-        <Popover>
-            <PopoverTrigger asChild>
-                <Button variant="outline" size="icon">
-                    <CalendarIcon className="h-5 w-5" />
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-                <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => date && onDateSelect(date)}
-                    initialFocus
-                    modifiers={{ completed: completedDays }}
-                    modifiersStyles={{
-                        completed: { 
-                            position: 'relative',
-                        }
-                    }}
-                    components={{
-                        DayContent: (props) => {
-                            const isCompleted = completedDays.some(d => d.toDateString() === props.date.toDateString());
-                            return (
-                                <div className="relative w-full h-full flex items-center justify-center">
-                                    <span>{props.date.getDate()}</span>
-                                    {isCompleted && <div className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-primary" />}
-                                </div>
-                            )
-                        }
-                    }}
-                />
-            </PopoverContent>
-        </Popover>
+        <div className="flex items-center gap-2">
+            {isToday && (
+                 <Button variant="outline" size="icon" onClick={handleSave}>
+                    <Save className="h-5 w-5" />
+                 </Button>
+            )}
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="outline" size="icon">
+                        <CalendarIcon className="h-5 w-5" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                    <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => date && onDateSelect(date)}
+                        initialFocus
+                        modifiers={{ completed: completedDays }}
+                        modifiersStyles={{
+                            completed: { 
+                                position: 'relative',
+                            }
+                        }}
+                        components={{
+                            DayContent: (props) => {
+                                const isCompleted = completedDays.some(d => d.toDateString() === props.date.toDateString());
+                                return (
+                                    <div className="relative w-full h-full flex items-center justify-center">
+                                        <span>{props.date.getDate()}</span>
+                                        {isCompleted && <div className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-primary" />}
+                                    </div>
+                                )
+                            }
+                        }}
+                    />
+                </PopoverContent>
+            </Popover>
+        </div>
       </CardHeader>
       <CardContent className="flex flex-col flex-grow items-center justify-between">
         <div className="w-full">
