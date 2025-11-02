@@ -8,10 +8,14 @@ import { ArrowLeft, ArrowRight, BookText, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ComponentProps } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import AlphabetQuiz from './AlphabetQuiz';
+
+type QuizType = 'letter-to-transliteration' | 'transliteration-to-letter';
 
 export default function FoundationalLanguage({ className }: ComponentProps<'div'>) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isQuizTypeDialogOpen, setIsQuizTypeDialogOpen] = useState(false);
+    const [activeQuiz, setActiveQuiz] = useState<QuizType | null>(null);
 
     const handleNext = () => {
         setCurrentIndex((prev) => (prev + 1) % ALPHABET.length);
@@ -20,6 +24,15 @@ export default function FoundationalLanguage({ className }: ComponentProps<'div'
     const handlePrev = () => {
         setCurrentIndex((prev) => (prev - 1 + ALPHABET.length) % ALPHABET.length);
     };
+
+    const startQuiz = (type: QuizType) => {
+        setIsQuizTypeDialogOpen(false);
+        setActiveQuiz(type);
+    }
+    
+    const handleQuizClose = () => {
+        setActiveQuiz(null);
+    }
 
     const currentLetter = ALPHABET[currentIndex];
 
@@ -80,17 +93,23 @@ export default function FoundationalLanguage({ className }: ComponentProps<'div'
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-3 pt-4">
-                        <Button variant="secondary" className="w-full justify-between h-14 text-base px-4">
+                        <Button variant="secondary" className="w-full justify-between h-14 text-base px-4" onClick={() => startQuiz('letter-to-transliteration')}>
                             Letter → Transliteration
                             <ArrowRight className="h-5 w-5" />
                         </Button>
-                         <Button variant="secondary" className="w-full justify-between h-14 text-base px-4">
+                         <Button variant="secondary" className="w-full justify-between h-14 text-base px-4" onClick={() => startQuiz('transliteration-to-letter')}>
                             Transliteration → Letter
                             <ArrowRight className="h-5 w-5" />
                         </Button>
                     </div>
                 </DialogContent>
             </Dialog>
+            {activeQuiz && (
+                <AlphabetQuiz 
+                    quizType={activeQuiz}
+                    onClose={handleQuizClose}
+                />
+            )}
         </>
     )
 }
