@@ -93,17 +93,17 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                 <Accordion type="multiple" className="w-full space-y-2 flex-grow">
                     {surahs.map((surah) => (
                         <AccordionItem value={`item-${surah.id}`} key={surah.id} className="bg-secondary/30 rounded-lg border-b-0 px-4">
-                            <AccordionTrigger className="hover:no-underline py-3">
-                                <div className='flex justify-between items-center w-full'>
+                             <div className='flex justify-between items-center w-full'>
+                                <AccordionTrigger className="hover:no-underline py-3 flex-1">
                                     <div>
                                         <p className="font-bold text-lg text-left">{surah.name}</p>
                                         <p className="text-muted-foreground text-sm text-left">{surah.description}</p>
                                     </div>
-                                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteSurah(surah.id); }}>
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                            </AccordionTrigger>
+                                </AccordionTrigger>
+                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteSurah(surah.id); }}>
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            </div>
                             <AccordionContent>
                                 <div className="flex items-center space-x-2 pt-2 pb-4 border-t border-border/50">
                                     <Checkbox id={`mastered-${surah.id}`} checked={surah.mastered} onCheckedChange={() => handleMasteredToggle(surah.id)} />
