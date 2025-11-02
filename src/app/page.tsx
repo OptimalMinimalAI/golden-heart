@@ -11,6 +11,7 @@ import PrayerToolbelt from "@/components/dashboard/PrayerToolbelt";
 import FoundationalLanguage from "@/components/dashboard/FoundationalLanguage";
 
 const PRAYER_NAMES = ['Sub/Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+const ALL_PRAYERS = [...PRAYER_NAMES, '+'];
 
 export type PrayerHistory = {
   [date: string]: string[];
@@ -74,7 +75,9 @@ export default function DashboardPage() {
     const today = new Date();
     const todayStr = today.toDateString();
     
-    if (currentPrayers.size >= PRAYER_NAMES.length) {
+    const mainPrayersCompleted = PRAYER_NAMES.every(p => currentPrayers.has(p));
+
+    if (mainPrayersCompleted) {
         if (todayStr === lastCompletionDate) {
             return; // Already counted for today
         }
@@ -132,7 +135,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
             <PrayerTracker
-              prayers={PRAYER_NAMES}
+              prayers={ALL_PRAYERS}
               completedPrayers={completedPrayers}
               onTogglePrayer={handlePrayerToggle}
               streak={streak}
