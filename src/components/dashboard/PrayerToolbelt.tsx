@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, BookUp } from "lucide-react";
+import { Plus, Trash2, BookUp, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ComponentProps } from "react";
 import { useToast } from '@/hooks/use-toast';
@@ -14,9 +14,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SURAHS_CONTENT, type SurahContent } from '@/lib/surahs';
+import { ALL_SURAHS, type SurahMeta } from '@/lib/all-surahs';
+import { Input } from '../ui/input';
 
 interface Surah {
     id: number;
@@ -35,14 +37,15 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
     const { toast } = useToast();
     const [isClient, setIsClient] = useState(false);
     const [selectedSurah, setSelectedSurah] = useState<SurahContent | null>(null);
-    
+    const [isAddSurahDialogOpen, setIsAddSurahDialogOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
     useEffect(() => {
         setIsClient(true);
         const savedSurahs = localStorage.getItem('prayerToolbeltSurahs');
         if (savedSurahs) {
             try {
                 const parsedSurahs = JSON.parse(savedSurahs);
-                // Basic validation to ensure we don't crash on bad data
                 if (Array.isArray(parsedSurahs) && parsedSurahs.every(s => 'id' in s && 'name' in s)) {
                     setSurahs(parsedSurahs);
                 } else {
@@ -74,20 +77,26 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
         });
     };
     
-    const handleAddSurah = () => {
-        // This is a placeholder. A real implementation would have a dialog
-        // to search and add surahs.
-        const newId = Math.max(0, ...surahs.map(s => s.id)) + 1;
+    const handleAddSurah = (surahToAdd: SurahMeta) => {
+        if (surahs.some(s => s.id === surahToAdd.id)) {
+            toast({
+                variant: "destructive",
+                title: "Surah Already Exists",
+                description: `${surahToAdd.name} is already in your toolbelt.`,
+            });
+            return;
+        }
+
         const newSurah: Surah = {
-            id: newId,
-            name: `(${newId}) New Surah`,
-            description: "New Description",
+            id: surahToAdd.id,
+            name: `(${surahToAdd.id}) ${surahToAdd.name}`,
+            description: surahToAdd.translation,
             mastered: false
         };
-        setSurahs([...surahs, newSurah]);
+        setSurahs([...surahs, newSurah].sort((a, b) => a.id - b.id));
         toast({
             title: "Surah Added",
-            description: "A new surah has been added for you to customize.",
+            description: `${surahToAdd.name} has been added to your toolbelt.`,
         });
     };
     
@@ -95,8 +104,21 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
         const surahContent = SURAHS_CONTENT.find(s => s.id === surahId);
         if (surahContent) {
             setSelectedSurah(surahContent);
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Content not available",
+                description: "The full content for this Surah is not yet available in the app."
+            })
         }
     }
+
+    const filteredSurahs = ALL_SURAHS.filter(surah =>
+        surah.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        surah.translation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        surah.arabic.includes(searchQuery) ||
+        String(surah.id).includes(searchQuery)
+    );
 
     return (
         <>
@@ -108,21 +130,22 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                     <CardDescription>Quick access to important Surahs/Ayats for mastery.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col flex-grow">
+                    <ScrollArea className='flex-grow pr-4 -mr-4'>
                     <Accordion type="multiple" className="w-full space-y-2 flex-grow">
                         {surahs.map((surah) => (
-                            <AccordionItem value={`item-${surah.id}`} key={surah.id} className="bg-secondary/30 rounded-lg border-b-0 px-4">
-                                <div className='flex justify-between items-center w-full'>
+                            <AccordionItem value={`item-${surah.id}`} key={surah.id} className="bg-secondary/30 rounded-lg border-b-0">
+                                <div className='flex justify-between items-center w-full group px-4'>
                                     <AccordionTrigger className="hover:no-underline py-3 flex-1" onClick={() => openSurahDialog(surah.id)}>
                                         <div>
                                             <p className="font-bold text-lg text-left">{surah.name}</p>
                                             <p className="text-muted-foreground text-sm text-left">{surah.description}</p>
                                         </div>
                                     </AccordionTrigger>
-                                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0" onClick={(e) => { e.stopPropagation(); handleDeleteSurah(surah.id); }}>
+                                     <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0" onClick={(e) => { e.stopPropagation(); handleDeleteSurah(surah.id); }}>
                                         <Trash2 className="w-4 h-4" />
                                     </Button>
                                 </div>
-                                <AccordionContent>
+                                <AccordionContent className="px-4">
                                     <div className="flex items-center space-x-2 pt-2 pb-4 border-t border-border/50">
                                         <Checkbox id={`mastered-${surah.id}`} checked={surah.mastered} onCheckedChange={() => handleMasteredToggle(surah.id)} />
                                         <label
@@ -136,7 +159,8 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                             </AccordionItem>
                         ))}
                     </Accordion>
-                     <Button onClick={handleAddSurah} variant="outline" className="mt-4">
+                    </ScrollArea>
+                     <Button onClick={() => setIsAddSurahDialogOpen(true)} variant="outline" className="mt-4">
                         <Plus className="mr-2 h-4 w-4" />
                         Add Surah
                     </Button>
@@ -169,6 +193,39 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                         </ScrollArea>
                         </>
                     )}
+                </DialogContent>
+            </Dialog>
+
+             <Dialog open={isAddSurahDialogOpen} onOpenChange={setIsAddSurahDialogOpen}>
+                <DialogContent className="max-w-md h-[70vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Add Surah to Toolbelt</DialogTitle>
+                        <DialogDescription>Search for a Surah to add to your quick access list.</DialogDescription>
+                    </DialogHeader>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input 
+                            placeholder="Search by name, number, or Arabic..."
+                            className="pl-10"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <ScrollArea className="flex-grow -mx-6">
+                        <div className="px-6">
+                        {filteredSurahs.map((surah) => (
+                            <div key={surah.id} className="flex items-center justify-between py-3 border-b border-border/50 last:border-b-0">
+                                <div>
+                                    <p className="font-bold">({surah.id}) {surah.name}</p>
+                                    <p className="text-sm text-muted-foreground">{surah.translation}</p>
+                                </div>
+                                <Button size="icon" variant="ghost" onClick={() => handleAddSurah(surah)}>
+                                    <Plus className="h-5 w-5" />
+                                </Button>
+                            </div>
+                        ))}
+                        </div>
+                    </ScrollArea>
                 </DialogContent>
             </Dialog>
         </>

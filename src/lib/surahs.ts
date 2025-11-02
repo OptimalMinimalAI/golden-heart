@@ -13,6 +13,8 @@ export interface SurahContent {
     verses: Verse[];
 }
 
+// NOTE: Only a subset of Surahs have their full content here for the dialog display.
+// The full list of Surah names for the 'Add Surah' dialog is in `all-surahs.ts`
 export const SURAHS_CONTENT: SurahContent[] = [
     {
         id: 1,
@@ -101,5 +103,50 @@ export const SURAHS_CONTENT: SurahContent[] = [
                 translation: "And from the evil of an envier when he envies"
             }
         ]
+    },
+    {
+        id: 114,
+        name: "An-Nas",
+        arabicName: "النَّاسِ",
+        translation: "Mankind",
+        verses: [
+            {
+                id: 1,
+                "arabic": "قُلْ أَعُوذُ بِرَبِّ النَّاسِ",
+                "transliteration": "Qul a'uzu birabbin nas",
+                "translation": "Say, I seek refuge in the Lord of mankind,"
+            },
+            {
+                id: 2,
+                "arabic": "مَلِكِ النَّاسِ",
+                "transliteration": "Malikin nas",
+                "translation": "The King of mankind,"
+            },
+            {
+                id: 3,
+                "arabic": "إِلَٰهِ النَّاسِ",
+                "transliteration": "Ilahin nas",
+                "translation": "The god of mankind,"
+            },
+            {
+                id: 4,
+                "arabic": "مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ",
+                "transliteration": "Min sharril waswasil khannas",
+                "translation": "From the evil of the retreating whisperer,"
+            },
+            {
+                id: 5,
+                "arabic": "الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ",
+                "transliteration": "Allathee yuwaswisu fee sudoorin nas",
+                "translation": "Who whispers [evil] into the breasts of mankind,"
+            },
+            {
+                id: 6,
+                "arabic": "مِنَ الْجِنَّةِ وَالنَّاسِ",
+                "transliteration": "Minal jinnati wannas",
+                "translation": "From among the jinn and mankind."
+            }
+        ]
     }
 ];
+
