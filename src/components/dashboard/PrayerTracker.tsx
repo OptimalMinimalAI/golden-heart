@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -44,6 +45,7 @@ export default function PrayerTracker({ prayers, completedPrayers, onTogglePraye
   const formattedDate = useFormattedDate(selectedDate);
   const isToday = selectedDate.toDateString() === new Date().toDateString();
   const { toast } = useToast();
+  const mainPrayerCount = 5;
 
   const handleSave = () => {
     toast({
@@ -65,7 +67,7 @@ export default function PrayerTracker({ prayers, completedPrayers, onTogglePraye
   };
 
   const completedDays = Object.keys(prayerHistory).filter(dateStr => {
-    return prayerHistory[dateStr].length >= prayers.length;
+    return prayerHistory[dateStr].length >= mainPrayerCount;
   }).map(dateStr => new Date(dateStr));
   
   return (
@@ -148,7 +150,7 @@ export default function PrayerTracker({ prayers, completedPrayers, onTogglePraye
         <div className="text-center space-y-2">
             <p className="text-4xl font-bold">
                 <span className="text-primary">{completedPrayers.size}</span>
-                <span className="text-muted-foreground">/{prayers.length}</span>
+                <span className="text-muted-foreground">/{mainPrayerCount}</span>
             </p>
             <p className="text-muted-foreground text-sm">"Constant remembrance... destroys all illusions."</p>
         </div>

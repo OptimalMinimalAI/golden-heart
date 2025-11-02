@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,8 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import PrayerToolbelt from "@/components/dashboard/PrayerToolbelt";
 import FoundationalLanguage from "@/components/dashboard/FoundationalLanguage";
 import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, doc, getDoc, setDoc, query, where, getDocs, serverTimestamp } from "firebase/firestore";
-import { setDocumentNonBlocking } from "@/firebase";
+import { collection, doc, getDoc, setDoc, query, where, getDocs, serverTimestamp, deleteDoc } from "firebase/firestore";
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const PRAYER_NAMES = ['Sub/Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 const ALL_PRAYERS = [...PRAYER_NAMES, '+'];
@@ -47,28 +48,36 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (!isClient || !user || !prayerRecordsRef) return;
+    if (!isClient || !user || !prayerRecordsRef) {
+      setCompletedPrayers(new Set());
+      return;
+    }
 
     const dateKey = selectedDate.toISOString().split('T')[0];
     const q = query(prayerRecordsRef, where("date", "==", dateKey));
     
     getDocs(q).then(querySnapshot => {
       const prayersForDate = new Set<string>();
-      const historyUpdate: PrayerHistory = {};
-      
       querySnapshot.forEach(doc => {
         const record = doc.data();
         prayersForDate.add(record.prayerType);
-        
-        const recordDateKey = new Date(record.date).toDateString();
-        if (!historyUpdate[recordDateKey]) {
-          historyUpdate[recordDateKey] = [];
-        }
-        historyUpdate[recordDateKey].push(record.prayerType);
       });
-      
       setCompletedPrayers(prayersForDate);
-      setPrayerHistory(prev => ({ ...prev, ...historyUpdate }));
+    });
+
+    const allRecordsQuery = query(prayerRecordsRef);
+    getDocs(allRecordsQuery).then(querySnapshot => {
+        const historyUpdate: PrayerHistory = {};
+        querySnapshot.forEach(doc => {
+            const record = doc.data();
+            const recordDate = new Date(record.date + 'T00:00:00'); // Ensure date is parsed correctly
+            const recordDateKey = recordDate.toDateString();
+            if (!historyUpdate[recordDateKey]) {
+                historyUpdate[recordDateKey] = [];
+            }
+            historyUpdate[recordDateKey].push(record.prayerType);
+        });
+        setPrayerHistory(historyUpdate);
     });
     
   }, [isClient, user, selectedDate, prayerRecordsRef]);
@@ -80,7 +89,7 @@ export default function DashboardPage() {
       if (docSnap.exists()) {
         const streakData = docSnap.data();
         setStreak(streakData.days || 0);
-        setLastCompletionDate(streakData.endDate ? new Date(streakData.endDate).toDateString() : null);
+        setLastCompletionDate(streakData.endDate ? new Date(streakData.endDate + 'T00:00:00').toDateString() : null);
       }
     });
 
@@ -98,7 +107,7 @@ export default function DashboardPage() {
     
     if (newCompletedPrayers.has(prayerName)) {
       newCompletedPrayers.delete(prayerName);
-      // In a real app, you would use deleteDocumentNonBlocking, but for simplicity...
+      deleteDocumentNonBlocking(prayerDocRef);
     } else {
       newCompletedPrayers.add(prayerName);
       const prayerRecord = {
