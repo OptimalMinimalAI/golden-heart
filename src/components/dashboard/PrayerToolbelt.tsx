@@ -4,17 +4,11 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, BookUp, Search, X } from "lucide-react";
+import { Plus, X, BookUp, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ComponentProps } from "react";
 import { useToast } from '@/hooks/use-toast';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SURAHS_CONTENT, type SurahContent } from '@/lib/surahs';
 import { ALL_SURAHS, type SurahMeta } from '@/lib/all-surahs';
@@ -131,34 +125,30 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                 </CardHeader>
                 <CardContent className="flex flex-col flex-grow">
                     <ScrollArea className='flex-grow pr-4 -mr-4'>
-                    <Accordion type="multiple" className="w-full space-y-2 flex-grow">
-                        {surahs.map((surah) => (
-                            <AccordionItem value={`item-${surah.id}`} key={surah.id} className="bg-secondary/30 rounded-lg border-b-0">
-                                <div className='flex justify-between items-center w-full group px-4'>
-                                    <AccordionTrigger className="hover:no-underline py-3 flex-1" onClick={() => openSurahDialog(surah.id)}>
-                                        <div>
-                                            <p className="font-bold text-lg text-left">{surah.name}</p>
-                                            <p className="text-muted-foreground text-sm text-left">{surah.description}</p>
-                                        </div>
-                                    </AccordionTrigger>
-                                     <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0" onClick={(e) => { e.stopPropagation(); handleDeleteSurah(surah.id); }}>
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                                <AccordionContent className="px-4">
-                                    <div className="flex items-center space-x-2 pt-2 pb-4 border-t border-border/50">
-                                        <Checkbox id={`mastered-${surah.id}`} checked={surah.mastered} onCheckedChange={() => handleMasteredToggle(surah.id)} />
-                                        <label
-                                            htmlFor={`mastered-${surah.id}`}
-                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                        >
-                                            Mastered
-                                        </label>
+                        <div className="space-y-4">
+                            {surahs.map((surah) => (
+                                <div key={surah.id} className="bg-secondary/30 rounded-lg p-4">
+                                    <div onClick={() => openSurahDialog(surah.id)} className="cursor-pointer">
+                                        <p className="font-bold text-lg">{surah.name}</p>
+                                        <p className="text-muted-foreground text-sm">{surah.description}</p>
                                     </div>
-                                </AccordionContent>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
+                                    <div className="flex justify-between items-center mt-4 pt-4 border-t border-border/20">
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox id={`mastered-${surah.id}`} checked={surah.mastered} onCheckedChange={() => handleMasteredToggle(surah.id)} />
+                                            <label
+                                                htmlFor={`mastered-${surah.id}`}
+                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                            >
+                                                Mastered
+                                            </label>
+                                        </div>
+                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0 h-auto w-auto px-1" onClick={() => handleDeleteSurah(surah.id)}>
+                                            <X className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </ScrollArea>
                      <Button onClick={() => setIsAddSurahDialogOpen(true)} variant="outline" className="mt-4">
                         <Plus className="mr-2 h-4 w-4" />
