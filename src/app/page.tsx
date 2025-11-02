@@ -6,11 +6,12 @@ import PrayerTracker from "@/components/dashboard/PrayerTracker";
 import DhikrTracker from "@/components/dashboard/DhikrTracker";
 import AllahNames from "@/components/dashboard/AllahNames";
 import DhikrMastery from "@/components/dashboard/DhikrMastery";
-import StreakCounter from "@/components/dashboard/StreakCounter";
-import { PRAYER_NAMES } from "@/lib/data";
 import { Skeleton } from "@/components/ui/skeleton";
 import PrayerToolbelt from "@/components/dashboard/PrayerToolbelt";
 import FoundationalLanguage from "@/components/dashboard/FoundationalLanguage";
+
+const PRAYER_NAMES = ['Sub/Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+
 
 export default function DashboardPage() {
   const [completedPrayers, setCompletedPrayers] = useState<Set<string>>(new Set());
@@ -65,14 +66,14 @@ export default function DashboardPage() {
     localStorage.setItem('completedPrayers', JSON.stringify(Array.from(newCompletedPrayers)));
     localStorage.setItem('lastPrayerDate', new Date().toDateString());
 
-    updateStreak(newCompletedPrayers, newCompletedPrayers.size >= 5);
+    updateStreak(newCompletedPrayers.size);
   };
 
-  const updateStreak = (currentPrayers: Set<string>, fivePrayersDone: boolean) => {
+  const updateStreak = (completedCount: number) => {
     const today = new Date();
     const todayStr = today.toDateString();
-
-    if (fivePrayersDone) {
+    
+    if (completedCount >= PRAYER_NAMES.length) {
         if (todayStr === lastCompletionDate) {
             return; // Already counted for today
         }
@@ -106,8 +107,7 @@ export default function DashboardPage() {
             <Skeleton className="h-6 w-80 mt-2 mx-auto" />
           </header>
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 mt-6">
-            <Skeleton className="lg:col-span-3 h-96" />
-            <Skeleton className="lg:col-span-1 h-96" />
+            <Skeleton className="lg:col-span-4 h-96" />
             <Skeleton className="lg:col-span-2 h-96" />
             <Skeleton className="lg:col-span-4 h-96" />
             <Skeleton className="lg:col-span-2 h-96" />
@@ -128,9 +128,9 @@ export default function DashboardPage() {
             prayers={PRAYER_NAMES}
             completedPrayers={completedPrayers}
             onTogglePrayer={handlePrayerToggle}
-            className="lg:col-span-3"
+            streak={streak}
+            className="lg:col-span-4"
           />
-          <StreakCounter streak={streak} className="lg:col-span-1" />
           <DhikrTracker className="lg:col-span-2" />
           <AllahNames className="lg:col-span-4" />
           <DhikrMastery className="lg:col-span-2" />
