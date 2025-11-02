@@ -49,7 +49,7 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
     <Card className={cn("h-full flex flex-col", className)}>
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center justify-between">
-          Advanced Dhikr Goal
+          Dhikr Tracker
           <Button variant="ghost" size="icon" onClick={() => setCount(0)} aria-label="Reset Dhikr count"><Repeat className="w-4 h-4 text-muted-foreground" /></Button>
         </CardTitle>
         <CardDescription>Minimum {goal.toLocaleString()}x remembrance a day.</CardDescription>
