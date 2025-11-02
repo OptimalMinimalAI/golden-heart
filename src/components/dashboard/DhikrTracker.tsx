@@ -22,7 +22,6 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
     if (savedCount) setCount(parseInt(savedCount, 10));
     if (savedGoal) {
         const savedGoalInt = parseInt(savedGoal, 10);
-        // Ensure the goal is at least 1000 if it was saved as something else before
         if (savedGoalInt) {
             setGoal(savedGoalInt);
         } else {
@@ -63,7 +62,7 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
           Dhikr Tracker
           <Button variant="ghost" size="icon" onClick={() => setCount(0)} aria-label="Reset Dhikr count"><Repeat className="w-4 h-4 text-muted-foreground" /></Button>
         </CardTitle>
-        <CardDescription>Minimum {goal.toLocaleString()}x remembrance per day.</CardDescription>
+        <CardDescription>1000x</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 justify-between flex-grow">
           <div className="space-y-4">
