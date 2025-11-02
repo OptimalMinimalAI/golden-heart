@@ -12,12 +12,17 @@ import FoundationalLanguage from "@/components/dashboard/FoundationalLanguage";
 
 const PRAYER_NAMES = ['Sub/Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
+export type PrayerHistory = {
+  [date: string]: string[];
+}
 
 export default function DashboardPage() {
   const [completedPrayers, setCompletedPrayers] = useState<Set<string>>(new Set());
   const [streak, setStreak] = useState(0);
   const [lastCompletionDate, setLastCompletionDate] = useState<string | null>(null);
+  const [prayerHistory, setPrayerHistory] = useState<PrayerHistory>({});
   const [isClient, setIsClient] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   useEffect(() => {
     setIsClient(true);
@@ -26,35 +31,31 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!isClient) return;
 
-    const savedPrayersRaw = localStorage.getItem('completedPrayers');
-    const savedDate = localStorage.getItem('lastPrayerDate');
-    const today = new Date().toDateString();
-
-    if (savedDate !== today) {
-      // It's a new day, reset prayers
-      localStorage.setItem('completedPrayers', '[]');
-      setCompletedPrayers(new Set());
-    } else {
-      if (savedPrayersRaw) {
-        try {
-          const savedPrayers = JSON.parse(savedPrayersRaw);
-          if (Array.isArray(savedPrayers)) {
-            setCompletedPrayers(new Set(savedPrayers));
-          }
-        } catch (e) {
-          console.error("Failed to parse saved prayers", e);
-          setCompletedPrayers(new Set());
-        }
-      }
-    }
-
+    // Load history
+    const savedHistoryRaw = localStorage.getItem('prayerHistory');
+    const loadedHistory = savedHistoryRaw ? JSON.parse(savedHistoryRaw) : {};
+    setPrayerHistory(loadedHistory);
+    
+    // Load data for the selected date
+    const dateKey = selectedDate.toDateString();
+    const prayersForDate = loadedHistory[dateKey] || [];
+    setCompletedPrayers(new Set(prayersForDate));
+    
+    // Load streak
     const savedStreak = localStorage.getItem('streak');
     const savedLastCompletionDate = localStorage.getItem('lastCompletionDate');
     setStreak(savedStreak ? parseInt(savedStreak, 10) : 0);
     setLastCompletionDate(savedLastCompletionDate);
-  }, [isClient]);
+
+  }, [isClient, selectedDate]);
 
   const handlePrayerToggle = (prayerName: string) => {
+    const todayKey = new Date().toDateString();
+    if (selectedDate.toDateString() !== todayKey) {
+        // block toggling for past dates.
+        return;
+    }
+    
     const newCompletedPrayers = new Set(completedPrayers);
     if (newCompletedPrayers.has(prayerName)) {
       newCompletedPrayers.delete(prayerName);
@@ -62,30 +63,31 @@ export default function DashboardPage() {
       newCompletedPrayers.add(prayerName);
     }
     setCompletedPrayers(newCompletedPrayers);
+    
+    const newHistory = { ...prayerHistory, [todayKey]: Array.from(newCompletedPrayers) };
+    setPrayerHistory(newHistory);
+    localStorage.setItem('prayerHistory', JSON.stringify(newHistory));
 
-    localStorage.setItem('completedPrayers', JSON.stringify(Array.from(newCompletedPrayers)));
-    localStorage.setItem('lastPrayerDate', new Date().toDateString());
-
-    updateStreak(newCompletedPrayers.size);
+    updateStreak(newCompletedPrayers);
   };
 
-  const updateStreak = (completedCount: number) => {
+  const updateStreak = (currentPrayers: Set<string>) => {
     const today = new Date();
     const todayStr = today.toDateString();
     
-    if (completedCount >= PRAYER_NAMES.length) {
+    if (currentPrayers.size >= PRAYER_NAMES.length) {
         if (todayStr === lastCompletionDate) {
             return; // Already counted for today
         }
 
-        let newStreak = 1;
-        if (lastCompletionDate) {
-            const lastDate = new Date(lastCompletionDate);
-            const yesterday = new Date();
-            yesterday.setDate(today.getDate() - 1);
-            if (lastDate.toDateString() === yesterday.toDateString()) {
-                newStreak = streak + 1;
-            }
+        let newStreak;
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+
+        if (lastCompletionDate && new Date(lastCompletionDate).toDateString() === yesterday.toDateString()) {
+            newStreak = streak + 1;
+        } else {
+            newStreak = 1;
         }
         
         setStreak(newStreak);
@@ -136,6 +138,9 @@ export default function DashboardPage() {
               onTogglePrayer={handlePrayerToggle}
               streak={streak}
               className="lg:col-span-4"
+              prayerHistory={prayerHistory}
+              selectedDate={selectedDate}
+              onDateSelect={setSelectedDate}
             />
             <DhikrTracker className="lg:col-span-2" />
             <AllahNames className="lg:col-span-6" />

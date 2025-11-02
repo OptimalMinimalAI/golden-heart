@@ -7,6 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { ComponentProps } from 'react';
+import { Flame } from "lucide-react";
 
 export default function DhikrTracker({ className }: ComponentProps<'div'>) {
   const [count, setCount] = useState(0);
