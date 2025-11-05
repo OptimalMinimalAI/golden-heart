@@ -10,9 +10,11 @@ import DhikrMastery from "@/components/dashboard/DhikrMastery";
 import { Skeleton } from "@/components/ui/skeleton";
 import PrayerToolbelt from "@/components/dashboard/PrayerToolbelt";
 import FoundationalLanguage from "@/components/dashboard/FoundationalLanguage";
-import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useMemoFirebase, useAuth } from "@/firebase";
 import { collection, doc, getDoc, setDoc, query, where, getDocs, serverTimestamp, deleteDoc } from "firebase/firestore";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
+import { useToast } from "@/hooks/use-toast";
 
 const PRAYER_NAMES = ['Sub/Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 const ALL_PRAYERS = [...PRAYER_NAMES, '+'];
@@ -31,6 +33,8 @@ export default function DashboardPage() {
 
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const auth = useAuth();
+  const { toast } = useToast();
 
   const prayerRecordsRef = useMemoFirebase(() => 
     user ? collection(firestore, 'guest_users', user.uid, 'prayer_records') : null,
@@ -45,7 +49,32 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      let email = window.localStorage.getItem('emailForSignIn');
+      if (!email) {
+        email = window.prompt('Please provide your email for confirmation');
+      }
+      if (email) {
+        signInWithEmailLink(auth, email, window.location.href)
+          .then((result) => {
+            window.localStorage.removeItem('emailForSignIn');
+            toast({
+              title: "Signed In Successfully",
+              description: `Welcome back, ${result.user.email}!`,
+            });
+            // You can access the user's info with result.user
+          })
+          .catch((error) => {
+             console.error("Error signing in with email link:", error);
+             toast({
+                variant: 'destructive',
+                title: "Sign-in Failed",
+                description: "The link may be expired or invalid. Please try again.",
+             })
+          });
+      }
+    }
+  }, [auth, toast]);
 
   useEffect(() => {
     if (!isClient || !user || !prayerRecordsRef) {
