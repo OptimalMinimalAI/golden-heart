@@ -10,18 +10,22 @@ import { cn } from '@/lib/utils';
 import { Badge } from '../ui/badge';
 import { Card, CardContent } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
-import { Input } from '../ui/input';
-import type { QuizType } from './FoundationalLanguage';
+import type { FormsQuizType } from './FoundationalLanguage';
 
-interface Question {
-    prompt: string;
+type FormPosition = 'initial' | 'medial' | 'final' | 'isolated';
+
+interface FormQuestion {
+    prompt: {
+        name: string;
+        position: FormPosition;
+    };
     options: string[];
     correctAnswer: string;
     letter: AlphabetLetter;
 }
 
-interface AlphabetQuizProps {
-    quizType: QuizType;
+interface AlphabetFormsQuizProps {
+    quizType: FormsQuizType;
     onClose: () => void;
 }
 
@@ -29,51 +33,47 @@ const shuffleArray = <T,>(array: T[]): T[] => {
     return [...array].sort(() => Math.random() - 0.5);
 };
 
-const generateQuestions = (quizType: QuizType): Question[] => {
+const generateQuestions = (quizType: FormsQuizType): FormQuestion[] => {
     const shuffledAlphabet = shuffleArray(ALPHABET);
+    const positions: FormPosition[] = ['initial', 'medial', 'final', 'isolated'];
 
     return shuffledAlphabet.map((correctLetter) => {
-        let prompt: string;
+        const position = positions[Math.floor(Math.random() * positions.length)];
+        
+        let promptName: string;
         let correctAnswer: string;
         let options: string[];
 
-        switch (quizType) {
-            case 'letter-to-transliteration': // Now Letter -> Name
-                prompt = correctLetter.letter;
-                correctAnswer = correctLetter.name;
-                break;
-            case 'transliteration-to-letter': // Now Name -> Letter
-                prompt = correctLetter.name;
-                correctAnswer = correctLetter.letter;
-                break;
-            // Default to avoid TS errors, though these cases are now handled in the forms quiz
-            default:
-                prompt = correctLetter.letter;
-                correctAnswer = correctLetter.transliteration;
-                break;
+        if (quizType === 'transliteration-to-form') {
+            promptName = correctLetter.name;
+            correctAnswer = correctLetter.forms[position];
+
+            const wrongLetters = ALPHABET.filter(l => l.letter !== correctLetter.letter);
+            const wrongAnswers = shuffleArray(wrongLetters).slice(0, 3).map(l => {
+                // Get a random form from the wrong letter
+                const randomPosition = positions[Math.floor(Math.random() * positions.length)];
+                return l.forms[randomPosition];
+            });
+            
+            options = shuffleArray([correctAnswer, ...wrongAnswers]);
+        } else {
+            // Placeholder for form-to-transliteration
+            promptName = correctLetter.forms[position];
+            correctAnswer = correctLetter.name;
+            options = []; // This would need to be implemented
         }
 
-        const wrongAnswers = ALPHABET
-            .filter(l => l.letter !== correctLetter.letter)
-            .map(l => {
-                switch (quizType) {
-                    case 'letter-to-transliteration': return l.name;
-                    case 'transliteration-to-letter': return l.letter;
-                    default: return l.transliteration;
-                }
-            });
-
-        options = shuffleArray([
+        return { 
+            prompt: { name: promptName, position },
+            options,
             correctAnswer,
-            ...shuffleArray(wrongAnswers).slice(0, 3)
-        ]);
-
-        return { prompt, options, correctAnswer, letter: correctLetter };
+            letter: correctLetter
+        };
     });
 };
 
-export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
-    const [questions, setQuestions] = useState<Question[]>([]);
+export default function AlphabetFormsQuiz({ quizType, onClose }: AlphabetFormsQuizProps) {
+    const [questions, setQuestions] = useState<FormQuestion[]>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [userAnswers, setUserAnswers] = useState<(string | null)[]>([]);
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -98,7 +98,7 @@ export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
         if (selectedAnswer) return;
 
         setSelectedAnswer(answer);
-        const correct = answer.trim().toLowerCase() === questions[currentQuestionIndex].correctAnswer.toLowerCase();
+        const correct = answer.trim() === questions[currentQuestionIndex].correctAnswer.trim();
         setIsCorrect(correct);
 
         const newAnswers = [...userAnswers];
@@ -129,7 +129,7 @@ export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
 
     const score = useMemo(() => {
         return userAnswers.reduce((acc, answer, index) => {
-            if (questions[index] && answer?.trim().toLowerCase() === questions[index].correctAnswer.toLowerCase()) {
+            if (questions[index] && answer?.trim() === questions[index].correctAnswer.trim()) {
                 return acc + 1;
             }
             return acc;
@@ -140,41 +140,25 @@ export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
 
     const currentQuestion = questions[currentQuestionIndex];
     
-    const quizTitles: Record<QuizType, string> = {
-        'letter-to-transliteration': 'Letter → Name',
-        'transliteration-to-letter': 'Name → Letter',
-        // Kept for type safety, but not used in the UI anymore
-        'letter-to-name': 'Letter → Name',
-        'name-to-letter': 'Name → Letter',
+    const quizTitles: Record<FormsQuizType, string> = {
+        'transliteration-to-form': 'Name → Form',
+        'form-to-transliteration': 'Form → Name',
     };
     const quizTitle = quizTitles[quizType];
-
-    const renderProgressIndicator = () => {
-        const indicators = [];
-        for (let i = 0; i < questions.length; i++) {
-            const isAnswered = userAnswers[i] !== null;
-            const wasCorrect = isAnswered && userAnswers[i]?.trim().toLowerCase() === questions[i].correctAnswer.toLowerCase();
-
-            indicators.push(
-                <div key={i} className="flex items-center gap-1">
-                    {i > 0 && <div className="w-2 h-px bg-border"/>}
-                    { isAnswered ? 
-                        (wasCorrect ? <CheckCircle className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500" />) :
-                        <div className={cn("w-2 h-2 rounded-full", i === currentQuestionIndex ? "bg-primary" : "bg-muted")} />
-                    }
-                </div>
-            );
-        }
-        return <div className="flex items-center gap-1">{indicators.slice(0, 10)}...</div>;
+    const positionMap: Record<FormPosition, string> = {
+        initial: 'Beginning',
+        medial: 'Middle',
+        final: 'End',
+        isolated: 'Isolated'
     }
 
     return (
         <Dialog open={true} onOpenChange={(isOpen) => !isOpen && onClose()}>
             <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0">
                 <DialogHeader className="p-6 pb-0">
-                    <DialogTitle className="text-2xl font-headline">Arabic Alphabet Quiz</DialogTitle>
+                    <DialogTitle className="text-2xl font-headline">Letter Forms Quiz</DialogTitle>
                     <DialogDescription>
-                        Test your knowledge of the Arabic alphabet. Choose the correct answer for the prompt shown.
+                        Test your knowledge of Arabic letter forms. Choose the correct shape for the given letter and position.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -188,20 +172,17 @@ export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
                     {!showResults ? (
                         <>
                             <div className="flex justify-between items-center">
-                                <Badge variant="outline">Easy</Badge>
+                                <Badge>Hard</Badge>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    {renderProgressIndicator()}
+                                    {userAnswers.filter(a => a !== null).length} / {questions.length}
                                 </div>
                             </div>
 
-                            <p className="text-muted-foreground">What is the correct match for the prompt below?</p>
+                            <p className="text-muted-foreground">Choose the correct answer for the prompt below.</p>
 
-                            <div className={cn(
-                                "flex-grow flex items-center justify-center bg-secondary/30 rounded-lg my-4",
-                                quizType === 'transliteration-to-letter' && 'text-5xl font-bold',
-                                quizType === 'letter-to-transliteration' && 'font-headline text-9xl'
-                            )}>
-                                {currentQuestion.prompt}
+                            <div className="flex-grow flex flex-col items-center justify-center bg-secondary/30 rounded-lg my-4 p-4 text-center">
+                                <p className='text-5xl font-bold'>{currentQuestion.prompt.name}</p>
+                                <p className='text-muted-foreground mt-2 text-2xl'>{positionMap[currentQuestion.prompt.position]}</p>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-4">
@@ -214,8 +195,7 @@ export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
                                             key={index}
                                             variant="outline"
                                             className={cn(
-                                                "h-24 text-2xl justify-center",
-                                                quizType === 'transliteration-to-letter' && 'font-headline text-5xl',
+                                                "h-28 text-7xl justify-center font-headline",
                                                 isSelected && isCorrect && "bg-green-500/20 border-green-500 text-foreground",
                                                 isSelected && !isCorrect && "bg-red-500/20 border-red-500 text-foreground",
                                                 selectedAnswer && isCorrectAnswer && !isSelected && "bg-green-500/20 border-green-500"
@@ -246,14 +226,13 @@ export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
                                 {questions.map((q, i) => (
                                     <div key={i} className="flex items-center justify-between p-3 rounded-md bg-secondary/50">
                                         <div className='flex items-center gap-4'>
-                                            {userAnswers[i]?.trim().toLowerCase() === q.correctAnswer.toLowerCase() ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
-                                            <div className="font-headline text-2xl w-8 text-center">{q.letter.letter}</div>
+                                            {userAnswers[i]?.trim() === q.correctAnswer.trim() ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
                                             <div>
-                                                <p className="font-semibold">{q.letter.name}</p>
-                                                <p className="text-sm text-muted-foreground">{q.letter.transliteration}</p>
+                                                <p className="font-semibold">{q.letter.name} ({positionMap[q.prompt.position]})</p>
+                                                <p className="text-sm text-muted-foreground">Correct: <span className='font-headline text-lg'>{q.correctAnswer}</span></p>
                                             </div>
                                         </div>
-                                        {userAnswers[i]?.trim().toLowerCase() !== q.correctAnswer.toLowerCase() && userAnswers[i] !== null && <p className="text-red-500 line-through">{userAnswers[i] as string}</p>}
+                                        {userAnswers[i]?.trim() !== q.correctAnswer.trim() && userAnswers[i] !== null && <p className="text-red-500 line-through font-headline text-lg">{userAnswers[i] as string}</p>}
                                     </div>
                                 ))}
                                </div>
