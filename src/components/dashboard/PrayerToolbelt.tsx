@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -22,7 +23,7 @@ interface Surah {
     name: string;
     description: string;
     mastered: boolean;
-    guestUserId: string;
+    guestUserId?: string;
 }
 
 export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
@@ -30,6 +31,7 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
     const [selectedSurah, setSelectedSurah] = useState<SurahContent | null>(null);
     const [isAddSurahDialogOpen, setIsAddSurahDialogOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [localSurahs, setLocalSurahs] = useState<Surah[]>([]);
     
     const { user } = useUser();
     const firestore = useFirestore();
@@ -39,18 +41,40 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
       [firestore, user]
     );
 
-    const { data: surahs, isLoading } = useCollection<Surah>(toolbeltRef);
+    const { data: firestoreSurahs, isLoading } = useCollection<Surah>(toolbeltRef);
+    
+    const surahs = user ? firestoreSurahs : localSurahs;
+
+    useEffect(() => {
+        if (!user) {
+            const storedSurahs = localStorage.getItem('prayerToolbelt');
+            if (storedSurahs) {
+                setLocalSurahs(JSON.parse(storedSurahs));
+            }
+        }
+    }, [user]);
 
     const handleMasteredToggle = (surah: Surah) => {
-        if (!toolbeltRef) return;
-        const surahDocRef = doc(toolbeltRef, String(surah.id));
-        setDocumentNonBlocking(surahDocRef, { mastered: !surah.mastered }, { merge: true });
+        if (user && toolbeltRef) {
+            const surahDocRef = doc(toolbeltRef, String(surah.id));
+            setDocumentNonBlocking(surahDocRef, { mastered: !surah.mastered }, { merge: true });
+        } else {
+            const updatedSurahs = localSurahs.map(s => s.id === surah.id ? { ...s, mastered: !s.mastered } : s);
+            setLocalSurahs(updatedSurahs);
+            localStorage.setItem('prayerToolbelt', JSON.stringify(updatedSurahs));
+        }
     };
 
     const handleDeleteSurah = (surahId: number) => {
-        if (!toolbeltRef) return;
-        const surahDocRef = doc(toolbeltRef, String(surahId));
-        deleteDocumentNonBlocking(surahDocRef);
+        if (user && toolbeltRef) {
+            const surahDocRef = doc(toolbeltRef, String(surahId));
+            deleteDocumentNonBlocking(surahDocRef);
+        } else {
+            const updatedSurahs = localSurahs.filter(s => s.id !== surahId);
+            setLocalSurahs(updatedSurahs);
+            localStorage.setItem('prayerToolbelt', JSON.stringify(updatedSurahs));
+        }
+
         toast({
             title: "Surah Removed",
             description: "The Surah has been removed from your toolbelt.",
@@ -58,8 +82,6 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
     };
     
     const handleAddSurah = (surahToAdd: SurahMeta) => {
-        if (!toolbeltRef || !user) return;
-
         if (surahs?.some(s => s.id === surahToAdd.id)) {
             toast({
                 variant: "destructive",
@@ -69,14 +91,23 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
             return;
         }
 
-        const newSurah: Omit<Surah, 'id'> = {
+        const newSurah: Surah = {
+            id: surahToAdd.id,
             name: `(${surahToAdd.id}) ${surahToAdd.name}`,
             description: surahToAdd.translation,
             mastered: false,
-            guestUserId: user.uid,
+            guestUserId: user?.uid,
         };
-        const surahDocRef = doc(toolbeltRef, String(surahToAdd.id));
-        setDocumentNonBlocking(surahDocRef, newSurah, { merge: true });
+
+        if (user && toolbeltRef) {
+            const surahDocRef = doc(toolbeltRef, String(surahToAdd.id));
+            setDocumentNonBlocking(surahDocRef, { ...newSurah, id: undefined, guestUserId: user.uid }, { merge: true });
+        } else {
+            const updatedSurahs = [...localSurahs, newSurah];
+            setLocalSurahs(updatedSurahs);
+            localStorage.setItem('prayerToolbelt', JSON.stringify(updatedSurahs));
+        }
+        
         toast({
             title: "Surah Added",
             description: `${surahToAdd.name} has been added to your toolbelt.`,
@@ -117,7 +148,7 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                 <CardContent className="flex flex-col flex-grow">
                     <ScrollArea className='flex-grow pr-4 -mr-4'>
                         <div className="space-y-4">
-                            {isLoading && <p className="text-muted-foreground text-sm">Loading toolbelt...</p>}
+                            {isLoading && user && <p className="text-muted-foreground text-sm">Loading toolbelt...</p>}
                             {!isLoading && sortedSurahs.map((surah) => (
                                 <div key={surah.id} className="bg-secondary/30 rounded-lg p-4 flex flex-col">
                                     <div onClick={() => openSurahDialog(surah.id)} className="cursor-pointer flex-grow">
@@ -140,10 +171,10 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                                     </div>
                                 </div>
                             ))}
-                             {!isLoading && sortedSurahs.length === 0 && <p className="text-sm text-muted-foreground text-center pt-8">{user ? "No Surahs added yet." : "Please log in as a guest to use the toolbelt."}</p>}
+                             {!isLoading && sortedSurahs.length === 0 && <p className="text-sm text-muted-foreground text-center pt-8">No Surahs added yet.</p>}
                         </div>
                     </ScrollArea>
-                     <Button onClick={() => setIsAddSurahDialogOpen(true)} variant="outline" className="mt-4" disabled={!user}>
+                     <Button onClick={() => setIsAddSurahDialogOpen(true)} variant="outline" className="mt-4">
                         <Plus className="mr-2 h-4 w-4" />
                         Add Surah
                     </Button>

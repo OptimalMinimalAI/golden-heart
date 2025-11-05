@@ -49,7 +49,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setIsClient(true);
-    if (isSignInWithEmailLink(auth, window.location.href)) {
+    if (auth && isSignInWithEmailLink(auth, window.location.href)) {
       let email = window.localStorage.getItem('emailForSignIn');
       if (!email) {
         email = window.prompt('Please provide your email for confirmation');
@@ -77,82 +77,103 @@ export default function DashboardPage() {
   }, [auth, toast]);
 
   useEffect(() => {
-    if (!isClient || !user || !prayerRecordsRef) {
-      setCompletedPrayers(new Set());
-      return;
-    }
+    if (!isClient) return;
 
     const dateKey = selectedDate.toISOString().split('T')[0];
-    const q = query(prayerRecordsRef, where("date", "==", dateKey));
-    
-    getDocs(q).then(querySnapshot => {
-      const prayersForDate = new Set<string>();
-      querySnapshot.forEach(doc => {
-        const record = doc.data();
-        prayersForDate.add(record.prayerType);
-      });
-      setCompletedPrayers(prayersForDate);
-    });
 
-    const allRecordsQuery = query(prayerRecordsRef);
-    getDocs(allRecordsQuery).then(querySnapshot => {
-        const historyUpdate: PrayerHistory = {};
+    if (user && prayerRecordsRef) {
+      // User is logged in, fetch from Firestore
+      const q = query(prayerRecordsRef, where("date", "==", dateKey));
+      
+      getDocs(q).then(querySnapshot => {
+        const prayersForDate = new Set<string>();
         querySnapshot.forEach(doc => {
-            const record = doc.data();
-            const recordDate = new Date(record.date + 'T00:00:00'); // Ensure date is parsed correctly
-            const recordDateKey = recordDate.toDateString();
-            if (!historyUpdate[recordDateKey]) {
-                historyUpdate[recordDateKey] = [];
-            }
-            historyUpdate[recordDateKey].push(record.prayerType);
+          const record = doc.data();
+          prayersForDate.add(record.prayerType);
         });
-        setPrayerHistory(historyUpdate);
-    });
+        setCompletedPrayers(prayersForDate);
+      });
+
+      const allRecordsQuery = query(prayerRecordsRef);
+      getDocs(allRecordsQuery).then(querySnapshot => {
+          const historyUpdate: PrayerHistory = {};
+          querySnapshot.forEach(doc => {
+              const record = doc.data();
+              const recordDate = new Date(record.date + 'T00:00:00');
+              const recordDateKey = recordDate.toDateString();
+              if (!historyUpdate[recordDateKey]) {
+                  historyUpdate[recordDateKey] = [];
+              }
+              historyUpdate[recordDateKey].push(record.prayerType);
+          });
+          setPrayerHistory(historyUpdate);
+      });
+    } else {
+      // User is not logged in, fetch from localStorage
+      const localHistoryStr = localStorage.getItem('prayerHistory');
+      const localHistory: PrayerHistory = localHistoryStr ? JSON.parse(localHistoryStr) : {};
+      const prayersForDate = localHistory[selectedDate.toDateString()] || [];
+      setCompletedPrayers(new Set(prayersForDate));
+      setPrayerHistory(localHistory);
+    }
     
   }, [isClient, user, selectedDate, prayerRecordsRef]);
 
   useEffect(() => {
-    if (!isClient || !user || !dayStreakRef) return;
-
-    getDoc(dayStreakRef).then(docSnap => {
-      if (docSnap.exists()) {
-        const streakData = docSnap.data();
-        setStreak(streakData.days || 0);
-        setLastCompletionDate(streakData.endDate ? new Date(streakData.endDate + 'T00:00:00').toDateString() : null);
-      }
-    });
+    if (!isClient) return;
+    
+    if (user && dayStreakRef) {
+        getDoc(dayStreakRef).then(docSnap => {
+          if (docSnap.exists()) {
+            const streakData = docSnap.data();
+            setStreak(streakData.days || 0);
+            setLastCompletionDate(streakData.endDate ? new Date(streakData.endDate + 'T00:00:00').toDateString() : null);
+          }
+        });
+    } else {
+        const localStreak = localStorage.getItem('streak');
+        const localLastDate = localStorage.getItem('lastCompletionDate');
+        setStreak(localStreak ? parseInt(localStreak, 10) : 0);
+        setLastCompletionDate(localLastDate);
+    }
 
   }, [isClient, user, dayStreakRef]);
 
 
   const handlePrayerToggle = (prayerName: string) => {
-    if (!user || !prayerRecordsRef) return;
-    
-    const dateKey = selectedDate.toISOString().split('T')[0];
-    const prayerId = `${dateKey}_${prayerName}`;
-    const prayerDocRef = doc(prayerRecordsRef, prayerId);
-
     const newCompletedPrayers = new Set(completedPrayers);
     
     if (newCompletedPrayers.has(prayerName)) {
       newCompletedPrayers.delete(prayerName);
-      deleteDocumentNonBlocking(prayerDocRef);
     } else {
       newCompletedPrayers.add(prayerName);
-      const prayerRecord = {
-        id: prayerId,
-        guestUserId: user.uid,
-        prayerType: prayerName,
-        completed: true,
-        date: dateKey,
-      };
-      setDocumentNonBlocking(prayerDocRef, prayerRecord, { merge: true });
     }
-    
     setCompletedPrayers(newCompletedPrayers);
     
     const newHistory = { ...prayerHistory, [selectedDate.toDateString()]: Array.from(newCompletedPrayers) };
     setPrayerHistory(newHistory);
+    
+    if(user && prayerRecordsRef) {
+        const dateKey = selectedDate.toISOString().split('T')[0];
+        const prayerId = `${dateKey}_${prayerName}`;
+        const prayerDocRef = doc(prayerRecordsRef, prayerId);
+        
+        if (completedPrayers.has(prayerName)) { // before toggle, so it's a delete operation
+            deleteDocumentNonBlocking(prayerDocRef);
+        } else {
+            const prayerRecord = {
+                id: prayerId,
+                guestUserId: user.uid,
+                prayerType: prayerName,
+                completed: true,
+                date: dateKey,
+              };
+            setDocumentNonBlocking(prayerDocRef, prayerRecord, { merge: true });
+        }
+    } else {
+        localStorage.setItem('prayerHistory', JSON.stringify(newHistory));
+    }
+
 
     if (selectedDate.toDateString() === new Date().toDateString()) {
       updateStreak(newCompletedPrayers);
@@ -160,8 +181,6 @@ export default function DashboardPage() {
   };
 
   const updateStreak = (currentPrayers: Set<string>) => {
-    if (!user || !dayStreakRef) return;
-
     const today = new Date();
     const todayStr = today.toDateString();
     
@@ -185,14 +204,19 @@ export default function DashboardPage() {
         setStreak(newStreak);
         setLastCompletionDate(todayStr);
 
-        const streakData = {
-          id: 'current',
-          guestUserId: user.uid,
-          startDate: serverTimestamp(),
-          endDate: today.toISOString().split('T')[0],
-          days: newStreak
-        };
-        setDocumentNonBlocking(dayStreakRef, streakData, { merge: true });
+        if (user && dayStreakRef) {
+            const streakData = {
+              id: 'current',
+              guestUserId: user.uid,
+              startDate: serverTimestamp(),
+              endDate: today.toISOString().split('T')[0],
+              days: newStreak
+            };
+            setDocumentNonBlocking(dayStreakRef, streakData, { merge: true });
+        } else {
+            localStorage.setItem('streak', String(newStreak));
+            localStorage.setItem('lastCompletionDate', todayStr);
+        }
     }
   };
 
