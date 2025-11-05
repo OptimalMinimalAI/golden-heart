@@ -43,24 +43,29 @@ const generateQuestions = (quizType: FormsQuizType): FormQuestion[] => {
         let promptName: string;
         let correctAnswer: string;
         let options: string[];
+        let promptPositionText = position;
+
+        const wrongLetters = ALPHABET.filter(l => l.letter !== correctLetter.letter);
+        const wrongAnswers = shuffleArray(wrongLetters).slice(0, 3);
+
 
         if (quizType === 'transliteration-to-form') {
             promptName = correctLetter.name;
             correctAnswer = correctLetter.forms[position];
-
-            const wrongLetters = ALPHABET.filter(l => l.letter !== correctLetter.letter);
-            const wrongAnswers = shuffleArray(wrongLetters).slice(0, 3).map(l => {
-                // Get a random form from the wrong letter
-                const randomPosition = positions[Math.floor(Math.random() * positions.length)];
-                return l.forms[randomPosition];
-            });
             
-            options = shuffleArray([correctAnswer, ...wrongAnswers]);
-        } else {
-            // Placeholder for form-to-transliteration
+            options = shuffleArray([
+                correctAnswer, 
+                ...wrongAnswers.map(l => l.forms[positions[Math.floor(Math.random() * positions.length)]])
+            ]);
+
+        } else { // 'form-to-transliteration'
             promptName = correctLetter.forms[position];
             correctAnswer = correctLetter.name;
-            options = []; // This would need to be implemented
+
+            options = shuffleArray([
+                correctAnswer,
+                ...wrongAnswers.map(l => l.name)
+            ]);
         }
 
         return { 
@@ -181,8 +186,11 @@ export default function AlphabetFormsQuiz({ quizType, onClose }: AlphabetFormsQu
                             <p className="text-muted-foreground">Choose the correct answer for the prompt below.</p>
 
                             <div className="flex-grow flex flex-col items-center justify-center bg-secondary/30 rounded-lg my-4 p-4 text-center">
-                                <p className='text-5xl font-bold'>{currentQuestion.prompt.name}</p>
-                                <p className='text-muted-foreground mt-2 text-2xl'>{positionMap[currentQuestion.prompt.position]}</p>
+                                <p className={cn(
+                                    quizType === 'transliteration-to-form' && 'text-5xl font-bold',
+                                    quizType === 'form-to-transliteration' && 'font-headline text-9xl'
+                                )}>{currentQuestion.prompt.name}</p>
+                                {quizType === 'transliteration-to-form' && <p className='text-muted-foreground mt-2 text-2xl'>{positionMap[currentQuestion.prompt.position]}</p>}
                             </div>
                             
                             <div className="grid grid-cols-2 gap-4">
@@ -195,7 +203,8 @@ export default function AlphabetFormsQuiz({ quizType, onClose }: AlphabetFormsQu
                                             key={index}
                                             variant="outline"
                                             className={cn(
-                                                "h-28 text-7xl justify-center font-headline",
+                                                "h-28 text-center",
+                                                quizType === 'transliteration-to-form' ? 'text-7xl font-headline' : 'text-3xl font-bold',
                                                 isSelected && isCorrect && "bg-green-500/20 border-green-500 text-foreground",
                                                 isSelected && !isCorrect && "bg-red-500/20 border-red-500 text-foreground",
                                                 selectedAnswer && isCorrectAnswer && !isSelected && "bg-green-500/20 border-green-500"
@@ -228,11 +237,11 @@ export default function AlphabetFormsQuiz({ quizType, onClose }: AlphabetFormsQu
                                         <div className='flex items-center gap-4'>
                                             {userAnswers[i]?.trim() === q.correctAnswer.trim() ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
                                             <div>
-                                                <p className="font-semibold">{q.letter.name} ({positionMap[q.prompt.position]})</p>
-                                                <p className="text-sm text-muted-foreground">Correct: <span className='font-headline text-lg'>{q.correctAnswer}</span></p>
+                                                <p className="font-semibold">{q.letter.name} ({quizType === 'transliteration-to-form' ? positionMap[q.prompt.position] : ''})</p>
+                                                <p className="text-sm text-muted-foreground">Correct: <span className={quizType === 'transliteration-to-form' ? 'font-headline text-lg' : 'font-bold'}>{q.correctAnswer}</span></p>
                                             </div>
                                         </div>
-                                        {userAnswers[i]?.trim() !== q.correctAnswer.trim() && userAnswers[i] !== null && <p className="text-red-500 line-through font-headline text-lg">{userAnswers[i] as string}</p>}
+                                        {userAnswers[i]?.trim() !== q.correctAnswer.trim() && userAnswers[i] !== null && <p className={cn("text-red-500 line-through", quizType === 'transliteration-to-form' ? 'font-headline text-lg' : 'font-bold')}>{userAnswers[i] as string}</p>}
                                     </div>
                                 ))}
                                </div>

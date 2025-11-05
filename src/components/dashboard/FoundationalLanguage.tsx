@@ -104,7 +104,7 @@ export default function FoundationalLanguage({ className }: ComponentProps<'div'
                             <span className="sr-only">Previous Letter</span>
                         </Button>
 
-                        <div className={cn("relative w-[500px] h-[350px] transition-transform duration-700 [transform-style:preserve-3d]", isFlipped && "[transform:rotateY(180deg)]")}>
+                        <div className={cn("relative w-[600px] h-[350px] transition-transform duration-700 [transform-style:preserve-3d]", isFlipped && "[transform:rotateY(180deg)]")}>
                             {/* Front of Card */}
                             <div onClick={handleFlip} className="absolute w-full h-full p-6 bg-secondary/30 rounded-lg flex flex-col justify-center items-center cursor-pointer [backface-visibility:hidden]">
                                 <button onClick={(e) => { e.stopPropagation(); handlePronounce(currentLetter.name) }} className='flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors'>
@@ -184,7 +184,7 @@ export default function FoundationalLanguage({ className }: ComponentProps<'div'
                                 Name → Form
                                 <Badge>Hard</Badge>
                             </Button>
-                             <Button variant="secondary" className="w-full justify-between h-14 text-base px-4" onClick={() => {}}>
+                             <Button variant="secondary" className="w-full justify-between h-14 text-base px-4" onClick={() => startFormsQuiz('form-to-transliteration')}>
                                 Form → Name
                                 <Badge>Hard</Badge>
                             </Button>
