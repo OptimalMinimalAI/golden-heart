@@ -31,7 +31,6 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 const generateQuestions = (quizType: QuizType): Question[] => {
     const shuffledAlphabet = shuffleArray(ALPHABET);
-    const isTypingTest = quizType === 'letter-to-name' || quizType === 'name-to-letter';
 
     return shuffledAlphabet.map((correctLetter) => {
         let prompt: string;
@@ -57,22 +56,23 @@ const generateQuestions = (quizType: QuizType): Question[] => {
                 break;
         }
 
-        if (!isTypingTest) {
-            const wrongAnswers = ALPHABET
-                .filter(l => l.letter !== correctLetter.letter)
-                .map(l => {
-                    switch (quizType) {
-                        case 'letter-to-transliteration': return l.transliteration;
-                        case 'transliteration-to-letter': return l.letter;
-                        default: return '';
-                    }
-                });
+        // All are multiple choice now based on new request
+        const wrongAnswers = ALPHABET
+            .filter(l => l.letter !== correctLetter.letter)
+            .map(l => {
+                switch (quizType) {
+                    case 'letter-to-transliteration': return l.transliteration;
+                    case 'transliteration-to-letter': return l.letter;
+                    case 'letter-to-name': return l.name;
+                    case 'name-to-letter': return l.letter;
+                    default: return '';
+                }
+            });
 
-            options = shuffleArray([
-                correctAnswer,
-                ...shuffleArray(wrongAnswers).slice(0, 3)
-            ]);
-        }
+        options = shuffleArray([
+            correctAnswer,
+            ...shuffleArray(wrongAnswers).slice(0, 3)
+        ]);
 
         return { prompt, options, correctAnswer, letter: correctLetter };
     });
@@ -87,7 +87,7 @@ export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
     const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
     const [showResults, setShowResults] = useState(false);
 
-    const isTypingTest = quizType === 'letter-to-name' || quizType === 'name-to-letter';
+    const isTypingTest = false; // All are multiple choice now
 
     useEffect(() => {
         resetQuiz();
@@ -208,7 +208,7 @@ export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
                     {!showResults ? (
                         <>
                             <div className="flex justify-between items-center">
-                                <Badge variant={isTypingTest ? "default" : "outline"}>{isTypingTest ? "Hard" : "Easy"}</Badge>
+                                <Badge variant={quizType.includes('name') ? "default" : "outline"}>{quizType.includes('name') ? "Hard" : "Easy"}</Badge>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     {renderProgressIndicator()}
                                 </div>
@@ -256,7 +256,7 @@ export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
                                                 variant="outline"
                                                 className={cn(
                                                     "h-24 text-2xl justify-center",
-                                                    quizType === 'transliteration-to-letter' && 'font-headline text-5xl',
+                                                    (quizType === 'transliteration-to-letter' || quizType === 'name-to-letter') && 'font-headline text-5xl',
                                                     isSelected && isCorrect && "bg-green-500/20 border-green-500 text-foreground",
                                                     isSelected && !isCorrect && "bg-red-500/20 border-red-500 text-foreground",
                                                     selectedAnswer && isCorrectAnswer && !isSelected && "bg-green-500/20 border-green-500"
