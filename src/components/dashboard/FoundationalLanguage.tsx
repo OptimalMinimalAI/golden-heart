@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ALPHABET } from "@/lib/data";
@@ -12,8 +12,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import AlphabetQuiz from './AlphabetQuiz';
 import { textToSpeech } from '@/ai/flows/text-to-speech-flow';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '../ui/badge';
 
-type QuizType = 'letter-to-transliteration' | 'transliteration-to-letter';
+export type QuizType = 'letter-to-transliteration' | 'transliteration-to-letter' | 'letter-to-name' | 'name-to-letter';
+
+export interface QuizSummary {
+    lastScore: number | null;
+    lastAttempted: Date | null;
+}
 
 export default function FoundationalLanguage({ className }: ComponentProps<'div'>) {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -93,7 +99,7 @@ export default function FoundationalLanguage({ className }: ComponentProps<'div'
                             <span className="sr-only">Previous Letter</span>
                         </Button>
 
-                        <div className={cn("relative w-[380px] h-[350px] transition-transform duration-700 [transform-style:preserve-3d]", isFlipped && "[transform:rotateY(180deg)]")}>
+                        <div className={cn("relative w-[450px] h-[350px] transition-transform duration-700 [transform-style:preserve-3d]", isFlipped && "[transform:rotateY(180deg)]")}>
                             {/* Front of Card */}
                             <div onClick={handleFlip} className="absolute w-full h-full p-6 bg-secondary/30 rounded-lg flex flex-col justify-center items-center cursor-pointer [backface-visibility:hidden]">
                                 <button onClick={(e) => { e.stopPropagation(); handlePronounce(currentLetter.name) }} className='flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors'>
@@ -148,22 +154,36 @@ export default function FoundationalLanguage({ className }: ComponentProps<'div'
             </Card>
 
             <Dialog open={isQuizTypeDialogOpen} onOpenChange={setIsQuizTypeDialogOpen}>
-                <DialogContent>
+                <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle className="text-xl">Choose Quiz Type</DialogTitle>
                         <DialogDescription>
                             Select how you'd like to be tested on the Arabic alphabet.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-3 pt-4">
-                        <Button variant="secondary" className="w-full justify-between h-14 text-base px-4" onClick={() => startQuiz('letter-to-transliteration')}>
-                            Letter → Transliteration
-                            <ArrowRight className="h-5 w-5" />
-                        </Button>
-                         <Button variant="secondary" className="w-full justify-between h-14 text-base px-4" onClick={() => startQuiz('transliteration-to-letter')}>
-                            Transliteration → Letter
-                            <ArrowRight className="h-5 w-5" />
-                        </Button>
+                    <div className="grid grid-cols-2 gap-4 pt-4">
+                        <div className='border-r pr-4'>
+                            <h3 className="font-semibold mb-2 text-center text-muted-foreground">Multiple Choice</h3>
+                             <Button variant="secondary" className="w-full justify-between h-14 text-base px-4 mb-2" onClick={() => startQuiz('letter-to-transliteration')}>
+                                Letter → Transliteration
+                                <Badge variant="outline">Easy</Badge>
+                            </Button>
+                             <Button variant="secondary" className="w-full justify-between h-14 text-base px-4" onClick={() => startQuiz('transliteration-to-letter')}>
+                                Transliteration → Letter
+                                <Badge variant="outline">Easy</Badge>
+                            </Button>
+                        </div>
+                        <div>
+                             <h3 className="font-semibold mb-2 text-center text-muted-foreground">Typing Test</h3>
+                             <Button variant="secondary" className="w-full justify-between h-14 text-base px-4 mb-2" onClick={() => startQuiz('letter-to-name')}>
+                                Letter → Name
+                                <Badge>Hard</Badge>
+                            </Button>
+                             <Button variant="secondary" className="w-full justify-between h-14 text-base px-4" onClick={() => startQuiz('name-to-letter')}>
+                                Name → Letter
+                                <Badge>Hard</Badge>
+                            </Button>
+                        </div>
                     </div>
                 </DialogContent>
             </Dialog>

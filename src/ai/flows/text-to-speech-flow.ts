@@ -12,6 +12,8 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import wav from 'wav';
 import { googleAI } from '@genkit-ai/google-genai';
+import fs from 'fs';
+import path from 'path';
 
 const TextToSpeechInputSchema = z.object({
     text: z.string().describe('The text to convert to speech.'),
@@ -61,6 +63,18 @@ const textToSpeechFlow = ai.defineFlow(
         outputSchema: TextToSpeechOutputSchema,
     },
     async ({ text }) => {
+        const sanitizedText = text.replace(/[^a-zA-Z0-9]/g, '_');
+        const audioDir = path.join(process.cwd(), 'public', 'audio', 'generated');
+        const audioPath = path.join(audioDir, `${sanitizedText}.wav`);
+
+        if (fs.existsSync(audioPath)) {
+            const audioBuffer = fs.readFileSync(audioPath);
+            const wavBase64 = audioBuffer.toString('base64');
+            return {
+                audioDataUri: `data:audio/wav;base64,${wavBase64}`
+            };
+        }
+
         const { media } = await ai.generate({
             model: googleAI.model('gemini-2.5-flash-preview-tts'),
             config: {
@@ -84,6 +98,8 @@ const textToSpeechFlow = ai.defineFlow(
         );
 
         const wavBase64 = await toWav(audioBuffer);
+        const wavBuffer = Buffer.from(wavBase64, 'base64');
+        fs.writeFileSync(audioPath, wavBuffer);
         
         return {
             audioDataUri: `data:audio/wav;base64,${wavBase64}`
