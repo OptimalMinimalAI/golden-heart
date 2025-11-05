@@ -24,6 +24,11 @@ interface FormQuestion {
     letter: AlphabetLetter;
 }
 
+interface AnsweredFormQuestion extends FormQuestion {
+    userAnswer: string;
+    isCorrect: boolean;
+}
+
 interface AlphabetFormsQuizProps {
     quizType: FormsQuizType;
     onClose: () => void;
@@ -33,54 +38,46 @@ const shuffleArray = <T,>(array: T[]): T[] => {
     return [...array].sort(() => Math.random() - 0.5);
 };
 
-const generateQuestions = (quizType: FormsQuizType): FormQuestion[] => {
-    const shuffledAlphabet = shuffleArray(ALPHABET);
+const generateQuestion = (quizType: FormsQuizType): FormQuestion => {
+    const correctLetter = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
     const positions: FormPosition[] = ['initial', 'medial', 'final', 'isolated'];
+    const position = positions[Math.floor(Math.random() * positions.length)];
+    
+    let promptName: string;
+    let correctAnswer: string;
+    let options: string[];
 
-    return shuffledAlphabet.map((correctLetter) => {
-        const position = positions[Math.floor(Math.random() * positions.length)];
+    const wrongLetters = ALPHABET.filter(l => l.letter !== correctLetter.letter);
+    const wrongAnswersPool = shuffleArray(wrongLetters);
+
+    if (quizType === 'transliteration-to-form') {
+        promptName = correctLetter.name;
+        correctAnswer = correctLetter.forms[position];
         
-        let promptName: string;
-        let correctAnswer: string;
-        let options: string[];
-        let promptPositionText = position;
+        const wrongOptions = wrongAnswersPool.slice(0, 3).map(l => l.forms[positions[Math.floor(Math.random() * positions.length)]]);
+        options = shuffleArray([correctAnswer, ...wrongOptions]);
 
-        const wrongLetters = ALPHABET.filter(l => l.letter !== correctLetter.letter);
-        const wrongAnswers = shuffleArray(wrongLetters).slice(0, 3);
+    } else { // 'form-to-transliteration'
+        promptName = correctLetter.forms[position];
+        correctAnswer = correctLetter.name;
 
+        const wrongOptions = wrongAnswersPool.slice(0, 3).map(l => l.name);
+        options = shuffleArray([correctAnswer, ...wrongOptions]);
+    }
 
-        if (quizType === 'transliteration-to-form') {
-            promptName = correctLetter.name;
-            correctAnswer = correctLetter.forms[position];
-            
-            options = shuffleArray([
-                correctAnswer, 
-                ...wrongAnswers.map(l => l.forms[positions[Math.floor(Math.random() * positions.length)]])
-            ]);
-
-        } else { // 'form-to-transliteration'
-            promptName = correctLetter.forms[position];
-            correctAnswer = correctLetter.name;
-
-            options = shuffleArray([
-                correctAnswer,
-                ...wrongAnswers.map(l => l.name)
-            ]);
-        }
-
-        return { 
-            prompt: { name: promptName, position },
-            options,
-            correctAnswer,
-            letter: correctLetter
-        };
-    });
+    return { 
+        prompt: { name: promptName, position },
+        options,
+        correctAnswer,
+        letter: correctLetter
+    };
 };
 
+const QUIZ_LENGTH = 99;
+
 export default function AlphabetFormsQuiz({ quizType, onClose }: AlphabetFormsQuizProps) {
-    const [questions, setQuestions] = useState<FormQuestion[]>([]);
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [userAnswers, setUserAnswers] = useState<(string | null)[]>([]);
+    const [currentQuestion, setCurrentQuestion] = useState<FormQuestion | null>(null);
+    const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredFormQuestion[]>([]);
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
     const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
     const [showResults, setShowResults] = useState(false);
@@ -90,41 +87,45 @@ export default function AlphabetFormsQuiz({ quizType, onClose }: AlphabetFormsQu
     }, [quizType]);
 
     const resetQuiz = () => {
-        const newQuestions = generateQuestions(quizType);
-        setQuestions(newQuestions);
-        setCurrentQuestionIndex(0);
-        setUserAnswers(Array(newQuestions.length).fill(null));
+        setCurrentQuestion(generateQuestion(quizType));
+        setAnsweredQuestions([]);
         setSelectedAnswer(null);
         setIsCorrect(null);
         setShowResults(false);
     };
 
+    const nextQuestion = () => {
+        if (answeredQuestions.length < QUIZ_LENGTH) {
+            setCurrentQuestion(generateQuestion(quizType));
+            setSelectedAnswer(null);
+            setIsCorrect(null);
+        } else {
+            setShowResults(true);
+        }
+    };
+
     const handleAnswerSubmission = (answer: string) => {
-        if (selectedAnswer) return;
+        if (selectedAnswer || !currentQuestion) return;
 
         setSelectedAnswer(answer);
-        const correct = answer.trim() === questions[currentQuestionIndex].correctAnswer.trim();
+        const correct = answer.trim() === currentQuestion.correctAnswer.trim();
         setIsCorrect(correct);
 
-        const newAnswers = [...userAnswers];
-        newAnswers[currentQuestionIndex] = answer;
-        setUserAnswers(newAnswers);
+        setAnsweredQuestions(prev => [
+            ...prev,
+            { ...currentQuestion, userAnswer: answer, isCorrect: correct }
+        ]);
 
         setTimeout(() => {
-            if (currentQuestionIndex < questions.length - 1) {
-                setCurrentQuestionIndex(prev => prev + 1);
-                setSelectedAnswer(null);
-                setIsCorrect(null);
-            } else {
-                setShowResults(true);
-            }
+            nextQuestion();
         }, 1000);
     }
 
     const goBack = () => {
         if (showResults) {
             setShowResults(false);
-            setCurrentQuestionIndex(0);
+            setAnsweredQuestions([]);
+            setCurrentQuestion(generateQuestion(quizType));
             setSelectedAnswer(null);
             setIsCorrect(null);
         } else {
@@ -133,17 +134,10 @@ export default function AlphabetFormsQuiz({ quizType, onClose }: AlphabetFormsQu
     }
 
     const score = useMemo(() => {
-        return userAnswers.reduce((acc, answer, index) => {
-            if (questions[index] && answer?.trim() === questions[index].correctAnswer.trim()) {
-                return acc + 1;
-            }
-            return acc;
-        }, 0);
-    }, [userAnswers, questions]);
+        return answeredQuestions.filter(q => q.isCorrect).length;
+    }, [answeredQuestions]);
 
-    if (questions.length === 0) return null;
-
-    const currentQuestion = questions[currentQuestionIndex];
+    if (!currentQuestion) return null;
     
     const quizTitles: Record<FormsQuizType, string> = {
         'transliteration-to-form': 'Name → Form',
@@ -179,7 +173,7 @@ export default function AlphabetFormsQuiz({ quizType, onClose }: AlphabetFormsQu
                             <div className="flex justify-between items-center">
                                 <Badge>Hard</Badge>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    {userAnswers.filter(a => a !== null).length} / {questions.length}
+                                    {answeredQuestions.length} / {QUIZ_LENGTH}
                                 </div>
                             </div>
 
@@ -225,23 +219,23 @@ export default function AlphabetFormsQuiz({ quizType, onClose }: AlphabetFormsQu
                             <CardContent className="p-6 text-center">
                                 <h2 className="text-2xl font-bold">Quiz Complete!</h2>
                                 <p className="text-muted-foreground">You scored</p>
-                                <p className="text-5xl font-bold text-primary my-4">{score} / {questions.length}</p>
-                                <p className="text-lg">({((score/questions.length)*100).toFixed(0)}%)</p>
+                                <p className="text-5xl font-bold text-primary my-4">{score} / {QUIZ_LENGTH}</p>
+                                <p className="text-lg">({((score/QUIZ_LENGTH)*100).toFixed(0)}%)</p>
                             </CardContent>
                            </Card>
                            
                            <ScrollArea className="w-full h-[40vh] mt-4">
                                <div className="space-y-2 pr-4">
-                                {questions.map((q, i) => (
+                                {answeredQuestions.map((q, i) => (
                                     <div key={i} className="flex items-center justify-between p-3 rounded-md bg-secondary/50">
                                         <div className='flex items-center gap-4'>
-                                            {userAnswers[i]?.trim() === q.correctAnswer.trim() ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
+                                            {q.isCorrect ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
                                             <div>
                                                 <p className="font-semibold">{q.letter.name} ({quizType === 'transliteration-to-form' ? positionMap[q.prompt.position] : ''})</p>
                                                 <p className="text-sm text-muted-foreground">Correct: <span className={quizType === 'transliteration-to-form' ? 'font-headline text-lg' : 'font-bold'}>{q.correctAnswer}</span></p>
                                             </div>
                                         </div>
-                                        {userAnswers[i]?.trim() !== q.correctAnswer.trim() && userAnswers[i] !== null && <p className={cn("text-red-500 line-through", quizType === 'transliteration-to-form' ? 'font-headline text-lg' : 'font-bold')}>{userAnswers[i] as string}</p>}
+                                        {!q.isCorrect && q.userAnswer !== null && <p className={cn("text-red-500 line-through", quizType === 'transliteration-to-form' ? 'font-headline text-lg' : 'font-bold')}>{q.userAnswer}</p>}
                                     </div>
                                 ))}
                                </div>

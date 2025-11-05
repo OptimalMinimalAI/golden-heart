@@ -20,6 +20,11 @@ interface Question {
     letter: AlphabetLetter;
 }
 
+interface AnsweredQuestion extends Question {
+    userAnswer: string;
+    isCorrect: boolean;
+}
+
 interface AlphabetQuizProps {
     quizType: QuizType;
     onClose: () => void;
@@ -29,53 +34,60 @@ const shuffleArray = <T,>(array: T[]): T[] => {
     return [...array].sort(() => Math.random() - 0.5);
 };
 
-const generateQuestions = (quizType: QuizType): Question[] => {
-    const shuffledAlphabet = shuffleArray(ALPHABET);
+const generateQuestion = (quizType: QuizType): Question => {
+    const correctLetter = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+    let prompt: string;
+    let correctAnswer: string;
+    let options: string[];
 
-    return shuffledAlphabet.map((correctLetter) => {
-        let prompt: string;
-        let correctAnswer: string;
-        let options: string[];
+    switch (quizType) {
+        case 'letter-to-name':
+            prompt = correctLetter.letter;
+            correctAnswer = correctLetter.name;
+            break;
+        case 'name-to-letter':
+            prompt = correctLetter.name;
+            correctAnswer = correctLetter.letter;
+            break;
+        // The 'transliteration' cases are now handled by the 'name' cases
+        case 'letter-to-transliteration':
+            prompt = correctLetter.letter;
+            correctAnswer = correctLetter.name;
+            break;
+        case 'transliteration-to-letter':
+            prompt = correctLetter.name;
+            correctAnswer = correctLetter.letter;
+            break;
+    }
 
-        switch (quizType) {
-            case 'letter-to-transliteration': // Now Letter -> Name
-                prompt = correctLetter.letter;
-                correctAnswer = correctLetter.name;
-                break;
-            case 'transliteration-to-letter': // Now Name -> Letter
-                prompt = correctLetter.name;
-                correctAnswer = correctLetter.letter;
-                break;
-            // Default to avoid TS errors, though these cases are now handled in the forms quiz
-            default:
-                prompt = correctLetter.letter;
-                correctAnswer = correctLetter.transliteration;
-                break;
-        }
+    const wrongAnswers = ALPHABET
+        .filter(l => l.letter !== correctLetter.letter)
+        .map(l => {
+            switch (quizType) {
+                case 'letter-to-name':
+                case 'letter-to-transliteration':
+                    return l.name;
+                case 'name-to-letter':
+                case 'transliteration-to-letter':
+                    return l.letter;
+            }
+        });
 
-        const wrongAnswers = ALPHABET
-            .filter(l => l.letter !== correctLetter.letter)
-            .map(l => {
-                switch (quizType) {
-                    case 'letter-to-transliteration': return l.name;
-                    case 'transliteration-to-letter': return l.letter;
-                    default: return l.transliteration;
-                }
-            });
+    options = shuffleArray([
+        correctAnswer,
+        ...shuffleArray(wrongAnswers).slice(0, 3)
+    ]);
 
-        options = shuffleArray([
-            correctAnswer,
-            ...shuffleArray(wrongAnswers).slice(0, 3)
-        ]);
-
-        return { prompt, options, correctAnswer, letter: correctLetter };
-    });
+    return { prompt, options, correctAnswer, letter: correctLetter };
 };
 
+
 export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
-    const [questions, setQuestions] = useState<Question[]>([]);
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [userAnswers, setUserAnswers] = useState<(string | null)[]>([]);
+    const isHard = quizType === 'letter-to-name' || quizType === 'name-to-letter';
+    const QUIZ_LENGTH = isHard ? 99 : ALPHABET.length;
+
+    const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+    const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
     const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
     const [showResults, setShowResults] = useState(false);
@@ -85,87 +97,69 @@ export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
     }, [quizType]);
 
     const resetQuiz = () => {
-        const newQuestions = generateQuestions(quizType);
-        setQuestions(newQuestions);
-        setCurrentQuestionIndex(0);
-        setUserAnswers(Array(newQuestions.length).fill(null));
+        setCurrentQuestion(generateQuestion(quizType));
+        setAnsweredQuestions([]);
         setSelectedAnswer(null);
         setIsCorrect(null);
         setShowResults(false);
     };
 
+    const nextQuestion = () => {
+        if (answeredQuestions.length < QUIZ_LENGTH) {
+            setCurrentQuestion(generateQuestion(quizType));
+            setSelectedAnswer(null);
+            setIsCorrect(null);
+        } else {
+            setShowResults(true);
+        }
+    }
+
     const handleAnswerSubmission = (answer: string) => {
-        if (selectedAnswer) return;
+        if (selectedAnswer || !currentQuestion) return;
 
         setSelectedAnswer(answer);
-        const correct = answer.trim().toLowerCase() === questions[currentQuestionIndex].correctAnswer.toLowerCase();
+        const correct = answer.trim().toLowerCase() === currentQuestion.correctAnswer.toLowerCase();
         setIsCorrect(correct);
 
-        const newAnswers = [...userAnswers];
-        newAnswers[currentQuestionIndex] = answer;
-        setUserAnswers(newAnswers);
+        setAnsweredQuestions(prev => [
+            ...prev,
+            { ...currentQuestion, userAnswer: answer, isCorrect: correct }
+        ]);
 
         setTimeout(() => {
-            if (currentQuestionIndex < questions.length - 1) {
-                setCurrentQuestionIndex(prev => prev + 1);
-                setSelectedAnswer(null);
-                setIsCorrect(null);
-            } else {
-                setShowResults(true);
-            }
+            nextQuestion();
         }, 1000);
     }
 
     const goBack = () => {
         if (showResults) {
             setShowResults(false);
-            setCurrentQuestionIndex(0);
-            setSelectedAnswer(null);
-            setIsCorrect(null);
+            resetQuiz();
         } else {
             onClose();
         }
     }
 
     const score = useMemo(() => {
-        return userAnswers.reduce((acc, answer, index) => {
-            if (questions[index] && answer?.trim().toLowerCase() === questions[index].correctAnswer.toLowerCase()) {
-                return acc + 1;
-            }
-            return acc;
-        }, 0);
-    }, [userAnswers, questions]);
+        return answeredQuestions.filter(q => q.isCorrect).length;
+    }, [answeredQuestions]);
 
-    if (questions.length === 0) return null;
-
-    const currentQuestion = questions[currentQuestionIndex];
+    if (!currentQuestion) return null;
     
     const quizTitles: Record<QuizType, string> = {
         'letter-to-transliteration': 'Letter → Name',
         'transliteration-to-letter': 'Name → Letter',
-        // Kept for type safety, but not used in the UI anymore
         'letter-to-name': 'Letter → Name',
         'name-to-letter': 'Name → Letter',
     };
     const quizTitle = quizTitles[quizType];
 
     const renderProgressIndicator = () => {
-        const indicators = [];
-        for (let i = 0; i < questions.length; i++) {
-            const isAnswered = userAnswers[i] !== null;
-            const wasCorrect = isAnswered && userAnswers[i]?.trim().toLowerCase() === questions[i].correctAnswer.toLowerCase();
-
-            indicators.push(
-                <div key={i} className="flex items-center gap-1">
-                    {i > 0 && <div className="w-2 h-px bg-border"/>}
-                    { isAnswered ? 
-                        (wasCorrect ? <CheckCircle className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500" />) :
-                        <div className={cn("w-2 h-2 rounded-full", i === currentQuestionIndex ? "bg-primary" : "bg-muted")} />
-                    }
-                </div>
-            );
-        }
-        return <div className="flex items-center gap-1">{indicators.slice(0, 10)}...</div>;
+        return (
+            <div className='text-sm text-muted-foreground'>
+                {answeredQuestions.length} / {QUIZ_LENGTH}
+            </div>
+        )
     }
 
     return (
@@ -188,18 +182,16 @@ export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
                     {!showResults ? (
                         <>
                             <div className="flex justify-between items-center">
-                                <Badge variant="outline">Easy</Badge>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    {renderProgressIndicator()}
-                                </div>
+                                <Badge variant={isHard ? 'default' : 'outline'}>{isHard ? 'Hard' : 'Easy'}</Badge>
+                                {renderProgressIndicator()}
                             </div>
 
                             <p className="text-muted-foreground">What is the correct match for the prompt below?</p>
 
                             <div className={cn(
                                 "flex-grow flex items-center justify-center bg-secondary/30 rounded-lg my-4",
-                                quizType === 'transliteration-to-letter' && 'text-5xl font-bold',
-                                quizType === 'letter-to-transliteration' && 'font-headline text-9xl'
+                                (quizType === 'transliteration-to-letter' || quizType === 'name-to-letter') && 'text-5xl font-bold',
+                                (quizType === 'letter-to-transliteration' || quizType === 'letter-to-name') && 'font-headline text-9xl'
                             )}>
                                 {currentQuestion.prompt}
                             </div>
@@ -215,7 +207,7 @@ export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
                                             variant="outline"
                                             className={cn(
                                                 "h-24 text-2xl justify-center",
-                                                quizType === 'transliteration-to-letter' && 'font-headline text-5xl',
+                                                (quizType === 'transliteration-to-letter' || quizType === 'name-to-letter') && 'font-headline text-5xl',
                                                 isSelected && isCorrect && "bg-green-500/20 border-green-500 text-foreground",
                                                 isSelected && !isCorrect && "bg-red-500/20 border-red-500 text-foreground",
                                                 selectedAnswer && isCorrectAnswer && !isSelected && "bg-green-500/20 border-green-500"
@@ -236,24 +228,24 @@ export default function AlphabetQuiz({ quizType, onClose }: AlphabetQuizProps) {
                             <CardContent className="p-6 text-center">
                                 <h2 className="text-2xl font-bold">Quiz Complete!</h2>
                                 <p className="text-muted-foreground">You scored</p>
-                                <p className="text-5xl font-bold text-primary my-4">{score} / {questions.length}</p>
-                                <p className="text-lg">({((score/questions.length)*100).toFixed(0)}%)</p>
+                                <p className="text-5xl font-bold text-primary my-4">{score} / {QUIZ_LENGTH}</p>
+                                <p className="text-lg">({((score/QUIZ_LENGTH)*100).toFixed(0)}%)</p>
                             </CardContent>
                            </Card>
                            
                            <ScrollArea className="w-full h-[40vh] mt-4">
                                <div className="space-y-2 pr-4">
-                                {questions.map((q, i) => (
+                                {answeredQuestions.map((q, i) => (
                                     <div key={i} className="flex items-center justify-between p-3 rounded-md bg-secondary/50">
                                         <div className='flex items-center gap-4'>
-                                            {userAnswers[i]?.trim().toLowerCase() === q.correctAnswer.toLowerCase() ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
+                                            {q.isCorrect ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
                                             <div className="font-headline text-2xl w-8 text-center">{q.letter.letter}</div>
                                             <div>
                                                 <p className="font-semibold">{q.letter.name}</p>
                                                 <p className="text-sm text-muted-foreground">{q.letter.transliteration}</p>
                                             </div>
                                         </div>
-                                        {userAnswers[i]?.trim().toLowerCase() !== q.correctAnswer.toLowerCase() && userAnswers[i] !== null && <p className="text-red-500 line-through">{userAnswers[i] as string}</p>}
+                                        {!q.isCorrect && q.userAnswer !== null && <p className="text-red-500 line-through">{q.userAnswer}</p>}
                                     </div>
                                 ))}
                                </div>
