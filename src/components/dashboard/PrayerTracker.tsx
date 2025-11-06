@@ -11,6 +11,7 @@ import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
 import type { PrayerHistory } from "@/app/page";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "../ui/badge";
 
 const PrayerStarIcon = ({ filled }: { filled: boolean }) => (
   <svg
@@ -110,11 +111,17 @@ export default function PrayerTracker({ prayers, completedPrayers, onTogglePraye
                         disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
                         components={{
                             DayContent: (props) => {
-                                const isCompleted = completedDays.some(d => d.toDateString() === props.date.toDateString());
+                                const prayersForDay = prayerHistory[props.date.toDateString()] || [];
+                                const prayerCount = prayersForDay.length;
+                                
                                 return (
                                     <div className="relative w-full h-full flex items-center justify-center">
                                         <span>{props.date.getDate()}</span>
-                                        {isCompleted && <div className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-primary" />}
+                                        {prayerCount > 0 && 
+                                            <Badge variant="secondary" className="absolute -top-1 -right-1 text-xs px-1.5 h-auto leading-tight rounded-full">
+                                                {prayerCount}
+                                            </Badge>
+                                        }
                                     </div>
                                 )
                             }

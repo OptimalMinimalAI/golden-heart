@@ -97,7 +97,7 @@ export default function Header() {
                 <>
                   <Button variant="secondary" disabled>
                       <User className="mr-2 h-4 w-4" />
-                      {user.isAnonymous ? "Guest User" : user.email}
+                      {user.isAnonymous ? "Guest" : user.email}
                   </Button>
                   <Button variant="outline" onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
@@ -106,6 +106,10 @@ export default function Header() {
                 </>
               ) : (
                 <>
+                  <Button variant="outline" onClick={handleGuestLogin}>
+                    <User className="mr-2 h-4 w-4" />
+                    Guest
+                  </Button>
                   <Button variant="outline" onClick={() => setIsLoginDialogOpen(true)}>
                     <LogIn className="mr-2 h-4 w-4" />
                     Log in
