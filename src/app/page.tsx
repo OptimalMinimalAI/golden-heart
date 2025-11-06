@@ -35,6 +35,8 @@ export default function DashboardPage() {
   const firestore = useFirestore();
   const auth = useAuth();
   const { toast } = useToast();
+  
+  const dateKey = selectedDate.toISOString().split('T')[0];
 
   const prayerRecordsRef = useMemoFirebase(() => 
     user ? collection(firestore, 'guest_users', user.uid, 'prayer_records') : null,
@@ -79,8 +81,6 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!isClient) return;
 
-    const dateKey = selectedDate.toISOString().split('T')[0];
-
     if (user && prayerRecordsRef) {
       // User is logged in, fetch from Firestore
       const q = query(prayerRecordsRef, where("date", "==", dateKey));
@@ -99,7 +99,9 @@ export default function DashboardPage() {
           const historyUpdate: PrayerHistory = {};
           querySnapshot.forEach(doc => {
               const record = doc.data();
-              const recordDate = new Date(record.date + 'T00:00:00');
+              // Firestore date is 'YYYY-MM-DD', convert to a Date object at UTC midnight
+              const recordDate = new Date(record.date + 'T00:00:00Z');
+              // Use toDateString for consistent, timezone-agnostic date key
               const recordDateKey = recordDate.toDateString();
               if (!historyUpdate[recordDateKey]) {
                   historyUpdate[recordDateKey] = [];
@@ -117,7 +119,7 @@ export default function DashboardPage() {
       setPrayerHistory(localHistory);
     }
     
-  }, [isClient, user, selectedDate, prayerRecordsRef]);
+  }, [isClient, user, selectedDate, prayerRecordsRef, dateKey]);
 
   useEffect(() => {
     if (!isClient) return;
@@ -127,7 +129,8 @@ export default function DashboardPage() {
           if (docSnap.exists()) {
             const streakData = docSnap.data();
             setStreak(streakData.days || 0);
-            setLastCompletionDate(streakData.endDate ? new Date(streakData.endDate + 'T00:00:00').toDateString() : null);
+            const streakEndDate = streakData.endDate ? new Date(streakData.endDate + 'T00:00:00Z') : null;
+            setLastCompletionDate(streakEndDate ? streakEndDate.toDateString() : null);
           }
         });
     } else {
@@ -141,6 +144,15 @@ export default function DashboardPage() {
 
 
   const handlePrayerToggle = (prayerName: string) => {
+    if (selectedDate.toDateString() !== new Date().toDateString()) {
+      toast({
+        variant: "destructive",
+        title: "Cannot edit past entries",
+        description: "You can only track prayers for the current day.",
+      });
+      return;
+    }
+
     const newCompletedPrayers = new Set(completedPrayers);
     
     if (newCompletedPrayers.has(prayerName)) {
@@ -154,7 +166,6 @@ export default function DashboardPage() {
     setPrayerHistory(newHistory);
     
     if(user && prayerRecordsRef) {
-        const dateKey = selectedDate.toISOString().split('T')[0];
         const prayerId = `${dateKey}_${prayerName}`;
         const prayerDocRef = doc(prayerRecordsRef, prayerId);
         
@@ -174,10 +185,7 @@ export default function DashboardPage() {
         localStorage.setItem('prayerHistory', JSON.stringify(newHistory));
     }
 
-
-    if (selectedDate.toDateString() === new Date().toDateString()) {
-      updateStreak(newCompletedPrayers);
-    }
+    updateStreak(newCompletedPrayers);
   };
 
   const updateStreak = (currentPrayers: Set<string>) => {

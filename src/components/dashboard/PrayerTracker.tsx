@@ -118,7 +118,7 @@ export default function PrayerTracker({ prayers, completedPrayers, onTogglePraye
                                     <div className="relative w-full h-full flex items-center justify-center">
                                         <span>{props.date.getDate()}</span>
                                         {prayerCount > 0 && 
-                                            <Badge variant="secondary" className="absolute -top-1 -right-1 text-xs px-1.5 h-auto leading-tight rounded-full">
+                                            <Badge variant={prayerCount >= 5 ? "default" : "secondary"} className="absolute -top-1 -right-1 text-xs px-1.5 h-auto leading-tight rounded-full">
                                                 {prayerCount}
                                             </Badge>
                                         }
