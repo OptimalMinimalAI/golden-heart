@@ -23,7 +23,7 @@ interface Surah {
     name: string;
     description: string;
     mastered: boolean;
-    guestUserId?: string;
+    userId?: string;
 }
 
 export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
@@ -31,49 +31,27 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
     const [selectedSurah, setSelectedSurah] = useState<SurahContent | null>(null);
     const [isAddSurahDialogOpen, setIsAddSurahDialogOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [localSurahs, setLocalSurahs] = useState<Surah[]>([]);
     
     const { user } = useUser();
     const firestore = useFirestore();
 
     const toolbeltRef = useMemoFirebase(() => 
-      user ? collection(firestore, 'guest_users', user.uid, 'prayer_toolbelt') : null,
+      user ? collection(firestore, 'users', user.uid, 'prayer_toolbelt') : null,
       [firestore, user]
     );
 
-    const { data: firestoreSurahs, isLoading } = useCollection<Surah>(toolbeltRef);
+    const { data: surahs, isLoading } = useCollection<Surah>(toolbeltRef);
     
-    const surahs = user ? firestoreSurahs : localSurahs;
-
-    useEffect(() => {
-        if (!user) {
-            const storedSurahs = localStorage.getItem('prayerToolbelt');
-            if (storedSurahs) {
-                setLocalSurahs(JSON.parse(storedSurahs));
-            }
-        }
-    }, [user]);
-
     const handleMasteredToggle = (surah: Surah) => {
-        if (user && toolbeltRef) {
-            const surahDocRef = doc(toolbeltRef, String(surah.id));
-            setDocumentNonBlocking(surahDocRef, { mastered: !surah.mastered }, { merge: true });
-        } else {
-            const updatedSurahs = localSurahs.map(s => s.id === surah.id ? { ...s, mastered: !s.mastered } : s);
-            setLocalSurahs(updatedSurahs);
-            localStorage.setItem('prayerToolbelt', JSON.stringify(updatedSurahs));
-        }
+        if (!user || !toolbeltRef) return;
+        const surahDocRef = doc(toolbeltRef, String(surah.id));
+        setDocumentNonBlocking(surahDocRef, { mastered: !surah.mastered }, { merge: true });
     };
 
     const handleDeleteSurah = (surahId: number) => {
-        if (user && toolbeltRef) {
-            const surahDocRef = doc(toolbeltRef, String(surahId));
-            deleteDocumentNonBlocking(surahDocRef);
-        } else {
-            const updatedSurahs = localSurahs.filter(s => s.id !== surahId);
-            setLocalSurahs(updatedSurahs);
-            localStorage.setItem('prayerToolbelt', JSON.stringify(updatedSurahs));
-        }
+        if (!user || !toolbeltRef) return;
+        const surahDocRef = doc(toolbeltRef, String(surahId));
+        deleteDocumentNonBlocking(surahDocRef);
 
         toast({
             title: "Surah Removed",
@@ -82,7 +60,7 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
     };
     
     const handleAddSurah = (surahToAdd: SurahMeta) => {
-        if (surahs?.some(s => s.id === surahToAdd.id)) {
+        if (!user || !toolbeltRef || surahs?.some(s => s.id === surahToAdd.id)) {
             toast({
                 variant: "destructive",
                 title: "Surah Already Exists",
@@ -91,22 +69,15 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
             return;
         }
 
-        const newSurah: Surah = {
-            id: surahToAdd.id,
+        const newSurah: Omit<Surah, 'id'> = {
             name: `(${surahToAdd.id}) ${surahToAdd.name}`,
             description: surahToAdd.translation,
             mastered: false,
-            guestUserId: user?.uid,
+            userId: user.uid,
         };
 
-        if (user && toolbeltRef) {
-            const surahDocRef = doc(toolbeltRef, String(surahToAdd.id));
-            setDocumentNonBlocking(surahDocRef, { ...newSurah, id: undefined, guestUserId: user.uid }, { merge: true });
-        } else {
-            const updatedSurahs = [...localSurahs, newSurah];
-            setLocalSurahs(updatedSurahs);
-            localStorage.setItem('prayerToolbelt', JSON.stringify(updatedSurahs));
-        }
+        const surahDocRef = doc(toolbeltRef, String(surahToAdd.id));
+        setDocumentNonBlocking(surahDocRef, newSurah, { merge: true });
         
         toast({
             title: "Surah Added",
@@ -171,10 +142,10 @@ export default function PrayerToolbelt({ className }: ComponentProps<'div'>) {
                                     </div>
                                 </div>
                             ))}
-                             {!isLoading && sortedSurahs.length === 0 && <p className="text-sm text-muted-foreground text-center pt-8">No Surahs added yet.</p>}
+                             {!isLoading && sortedSurahs.length === 0 && <p className="text-sm text-muted-foreground text-center pt-8">{user ? "No Surahs added yet." : "Please log in to use the toolbelt."}</p>}
                         </div>
                     </ScrollArea>
-                     <Button onClick={() => setIsAddSurahDialogOpen(true)} variant="outline" className="mt-4">
+                     <Button onClick={() => setIsAddSurahDialogOpen(true)} variant="outline" className="mt-4" disabled={!user}>
                         <Plus className="mr-2 h-4 w-4" />
                         Add Surah
                     </Button>

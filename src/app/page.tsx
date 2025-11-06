@@ -39,12 +39,12 @@ export default function DashboardPage() {
   const dateKey = selectedDate.toISOString().split('T')[0];
 
   const prayerRecordsRef = useMemoFirebase(() => 
-    user ? collection(firestore, 'guest_users', user.uid, 'prayer_records') : null,
+    user ? collection(firestore, 'users', user.uid, 'prayer_records') : null,
     [firestore, user]
   );
   
   const dayStreakRef = useMemoFirebase(() => 
-    user ? doc(firestore, 'guest_users', user.uid, 'day_streaks', 'current') : null,
+    user ? doc(firestore, 'users', user.uid, 'day_streaks', 'current') : null,
     [firestore, user]
   );
 

@@ -31,7 +31,7 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
   const dateKey = selectedDate.toISOString().split('T')[0];
 
   const dhikrRecordRef = useMemoFirebase(() =>
-    user ? doc(firestore, 'guest_users', user.uid, 'dhikr_records', dateKey) : null,
+    user ? doc(firestore, 'users', user.uid, 'dhikr_records', dateKey) : null,
     [user, firestore, dateKey]
   );
 
@@ -85,7 +85,7 @@ export default function DhikrTracker({ className }: ComponentProps<'div'>) {
         count: newCount,
         goal: finalGoal,
         date: new Date().toISOString().split('T')[0],
-        guestUserId: user?.uid,
+        userId: user?.uid,
         dhikrName: 'General'
       };
       setDocumentNonBlocking(dhikrRecordRef, dataToSet, { merge: true });

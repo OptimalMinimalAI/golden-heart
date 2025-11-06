@@ -86,7 +86,7 @@ export const SURAHS_CONTENT: SurahContent[] = [
             },
             {
                 id: 3,
-                arabic: "وَمِن شَرِّ غَاسِqٍ إِذَا وَقَبَ",
+                arabic: "وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ",
                 transliteration: "Wa-min sharri ghāsiqin idhā waqab",
                 translation: "And from the evil of darkness when it settles"
             },
@@ -149,4 +149,3 @@ export const SURAHS_CONTENT: SurahContent[] = [
         ]
     }
 ];
-

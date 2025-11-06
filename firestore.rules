@@ -1,24 +1,24 @@
 /**
- * @fileoverview Firestore Security Rules for the Guest Prayer App.
+ * @fileoverview Firestore Security Rules for the Prayer App.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model, where each guest user can only access their own data.
+ * This ruleset enforces a strict user-ownership model, where each user can only access their own data.
  *
  * Data Structure:
- * All data is nested under /guest_users/{guestUserId}, ensuring that data is isolated by user.
- * - /guest_users/{guestUserId}: Stores guest user profiles, with the document ID matching the Firebase Auth UID.
- * - /guest_users/{guestUserId}/prayer_records/{prayerRecordId}: Stores prayer records for each guest user.
- * - /guest_users/{guestUserId}/dhikr_records/{dhikrRecordId}: Stores dhikr records for each guest user.
- * - /guest_users/{guestUserId}/dhikrs/{dhikrId}: Stores Dhikrs for each guest user.
- * - /guest_users/{guestUserId}/day_streaks/{dayStreakId}: Stores day streak data for each guest user.
+ * All data is nested under /users/{userId}, ensuring that data is isolated by user.
+ * - /users/{userId}: Stores user profiles, with the document ID matching the Firebase Auth UID.
+ * - /users/{userId}/prayer_records/{prayerRecordId}: Stores prayer records for each user.
+ * - /users/{userId}/dhikr_records/{dhikrRecordId}: Stores dhikr records for each user.
+ * - /users/{userId}/dhikrs/{dhikrId}: Stores Dhikrs for each user.
+ * - /users/{userId}/day_streaks/{dayStreakId}: Stores day streak data for each user.
  *
  * Key Security Decisions:
- * - Guest users can only create, read, update, or delete their own data.
- * - Data for guest users is isolated using subcollections under their respective user IDs.
+ * - Users can only create, read, update, or delete their own data.
+ * - Data for users is isolated using subcollections under their respective user IDs.
  * - `list` operations are restricted to the owner of the subcollection.
  *
  * Denormalization for Authorization:
- * - The `guestUserId` is denormalized into the prayer_records, dhikr_records, dhikrs, and day_streaks documents to avoid costly `get()` calls when checking authorization.
+ * - The `userId` is denormalized into the prayer_records, dhikr_records, dhikrs, and day_streaks documents to avoid costly `get()` calls when checking authorization.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -28,12 +28,12 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
 
-    match /guest_users/{guestUserId} {
-      allow read, write: if isOwner(guestUserId);
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
     }
     
-    match /guest_users/{guestUserId}/{collection}/{docId} {
-      allow read, write: if isOwner(guestUserId);
+    match /users/{userId}/{collection}/{docId} {
+      allow read, write: if isOwner(userId);
     }
   }
 }

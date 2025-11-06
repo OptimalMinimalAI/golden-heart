@@ -4,7 +4,6 @@
 import { LogIn, LogOut, Moon, User, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth, useUser } from "@/firebase";
-import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
 import { signOut, sendSignInLinkToEmail } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -25,15 +24,6 @@ export default function Header() {
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [isSendingLink, setIsSendingLink] = useState(false);
-
-
-  const handleGuestLogin = () => {
-    initiateAnonymousSignIn(auth);
-    toast({
-      title: "Welcome, Guest!",
-      description: "You're now signed in anonymously.",
-    });
-  };
 
   const handleLogout = () => {
     signOut(auth);
@@ -97,7 +87,7 @@ export default function Header() {
                 <>
                   <Button variant="secondary" disabled>
                       <User className="mr-2 h-4 w-4" />
-                      {user.isAnonymous ? "Guest" : user.email}
+                      {user.email}
                   </Button>
                   <Button variant="outline" onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
@@ -106,10 +96,6 @@ export default function Header() {
                 </>
               ) : (
                 <>
-                  <Button variant="outline" onClick={handleGuestLogin}>
-                    <User className="mr-2 h-4 w-4" />
-                    Guest
-                  </Button>
                   <Button variant="outline" onClick={() => setIsLoginDialogOpen(true)}>
                     <LogIn className="mr-2 h-4 w-4" />
                     Log in

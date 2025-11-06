@@ -23,7 +23,7 @@ interface Dhikr {
   arabicText?: string;
   translation?: string;
   transliteration?: string;
-  guestUserId?: string;
+  userId?: string;
 }
 
 export default function DhikrMastery({ className }: ComponentProps<'div'>) {
@@ -36,24 +36,14 @@ export default function DhikrMastery({ className }: ComponentProps<'div'>) {
   const { toast } = useToast();
   const { user } = useUser();
   const firestore = useFirestore();
-  const [localDhikrs, setLocalDhikrs] = useState<Dhikr[]>([]);
 
   const dhikrsRef = useMemoFirebase(() => 
-    user ? collection(firestore, 'guest_users', user.uid, 'dhikrs') : null,
+    user ? collection(firestore, 'users', user.uid, 'dhikrs') : null,
     [firestore, user]
   );
   
-  const { data: firestoreDhikrs, isLoading } = useCollection<Dhikr>(dhikrsRef);
+  const { data: dhikrs, isLoading } = useCollection<Dhikr>(dhikrsRef);
 
-  useEffect(() => {
-    if (!user) {
-        const storedDhikrs = localStorage.getItem('dhikrs');
-        if (storedDhikrs) {
-            setLocalDhikrs(JSON.parse(storedDhikrs));
-        }
-    }
-  }, [user]);
-  
   useEffect(() => {
     if (editingDhikr) {
       setNewTranslation(editingDhikr.translation || "");
@@ -61,12 +51,10 @@ export default function DhikrMastery({ className }: ComponentProps<'div'>) {
     }
   }, [editingDhikr]);
 
-  const dhikrs = user ? firestoreDhikrs : localDhikrs;
-
   const handleAddDhikr = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedDhikr = newDhikr.trim();
-    if (!trimmedDhikr) return;
+    if (!trimmedDhikr || !user || !dhikrsRef) return;
 
     setIsEnriching(true);
 
@@ -78,17 +66,10 @@ export default function DhikrMastery({ className }: ComponentProps<'div'>) {
             arabicText: enrichedData.arabicText,
             translation: enrichedData.translation,
             transliteration: enrichedData.transliteration,
-            guestUserId: user?.uid,
+            userId: user.uid,
         };
 
-        if (user && dhikrsRef) {
-            addDocumentNonBlocking(dhikrsRef, dhikrData);
-        } else {
-            const newDhikrItem: Dhikr = { ...dhikrData, id: new Date().toISOString() };
-            const updatedDhikrs = [...localDhikrs, newDhikrItem];
-            setLocalDhikrs(updatedDhikrs);
-            localStorage.setItem('dhikrs', JSON.stringify(updatedDhikrs));
-        }
+        addDocumentNonBlocking(dhikrsRef, dhikrData);
 
         setNewDhikr("");
         toast({
@@ -104,15 +85,8 @@ export default function DhikrMastery({ className }: ComponentProps<'div'>) {
             description: "Unable to find details for the entered Dhikr. It has been saved as is.",
         });
         // Save without enrichment as a fallback
-        const fallbackDhikr: Omit<Dhikr, 'id'> = { name: trimmedDhikr, guestUserId: user?.uid };
-        if (user && dhikrsRef) {
-            addDocumentNonBlocking(dhikrsRef, fallbackDhikr);
-        } else {
-             const newDhikrItem: Dhikr = { ...fallbackDhikr, id: new Date().toISOString() };
-            const updatedDhikrs = [...localDhikrs, newDhikrItem];
-            setLocalDhikrs(updatedDhikrs);
-            localStorage.setItem('dhikrs', JSON.stringify(updatedDhikrs));
-        }
+        const fallbackDhikr: Omit<Dhikr, 'id'> = { name: trimmedDhikr, userId: user.uid };
+        addDocumentNonBlocking(dhikrsRef, fallbackDhikr);
         setNewDhikr("");
     } finally {
         setIsEnriching(false);
@@ -120,33 +94,20 @@ export default function DhikrMastery({ className }: ComponentProps<'div'>) {
   };
   
   const handleDeleteDhikr = (id: string) => {
-    if (user && dhikrsRef) {
-      deleteDocumentNonBlocking(doc(dhikrsRef, id));
-    } else {
-        const updatedDhikrs = localDhikrs.filter(d => d.id !== id);
-        setLocalDhikrs(updatedDhikrs);
-        localStorage.setItem('dhikrs', JSON.stringify(updatedDhikrs));
-    }
+    if (!user || !dhikrsRef) return;
+    deleteDocumentNonBlocking(doc(dhikrsRef, id));
   }
 
   const handleUpdateDhikr = () => {
-    if (!editingDhikr) return;
+    if (!editingDhikr || !user || !dhikrsRef) return;
 
     const updatedFields = {
       translation: newTranslation,
       transliteration: newTransliteration,
     };
 
-    if (user && dhikrsRef) {
-        const dhikrDocRef = doc(dhikrsRef, editingDhikr.id);
-        setDocumentNonBlocking(dhikrDocRef, updatedFields, { merge: true });
-    } else {
-        const updatedDhikrs = localDhikrs.map(d => 
-            d.id === editingDhikr.id ? { ...d, ...updatedFields } : d
-        );
-        setLocalDhikrs(updatedDhikrs);
-        localStorage.setItem('dhikrs', JSON.stringify(updatedDhikrs));
-    }
+    const dhikrDocRef = doc(dhikrsRef, editingDhikr.id);
+    setDocumentNonBlocking(dhikrDocRef, updatedFields, { merge: true });
 
     toast({
         title: "Dhikr Updated",
@@ -155,7 +116,6 @@ export default function DhikrMastery({ className }: ComponentProps<'div'>) {
   };
 
   const getDhikrDisplay = (dhikr: Dhikr) => {
-      // Check if input was likely English
       const isEnglish = dhikr.name.toLowerCase() === dhikr.translation?.toLowerCase();
       if (isEnglish) return dhikr.transliteration;
       return dhikr.translation;
@@ -177,16 +137,16 @@ export default function DhikrMastery({ className }: ComponentProps<'div'>) {
                 value={newDhikr}
                 onChange={(e) => setNewDhikr(e.target.value)}
                 placeholder="e.g., Subhanallah or Glory be to Allah"
-                disabled={isEnriching}
+                disabled={isEnriching || !user}
               />
               {isEnriching && <Bot className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-primary animate-pulse" />}
             </div>
-            <Button type="submit" size="icon" aria-label="Add Dhikr" disabled={isEnriching}><Plus /></Button>
+            <Button type="submit" size="icon" aria-label="Add Dhikr" disabled={isEnriching || !user}><Plus /></Button>
           </form>
           <ScrollArea className="flex-grow">
               <ul className="space-y-2 pr-4">
               {(isLoading || isEnriching) && user && <Skeleton className="h-16 w-full" />}
-              {dhikrs?.map((dhikr) => (
+              {user && dhikrs?.map((dhikr) => (
                   <li key={dhikr.id} className="flex items-start justify-between bg-secondary/50 p-3 rounded-md animate-in fade-in-0 slide-in-from-top-2 duration-300 group">
                     <div className="flex-1 pr-4">
                         <p className="font-semibold text-secondary-foreground">{dhikr.name}</p>
@@ -203,7 +163,8 @@ export default function DhikrMastery({ className }: ComponentProps<'div'>) {
                     </div>
                   </li>
               ))}
-              {!isLoading && (!dhikrs || dhikrs.length === 0) && <p className="text-sm text-muted-foreground text-center pt-8">No Dhikrs added yet.</p>}
+              {!user && <p className="text-sm text-muted-foreground text-center pt-8">Please log in to manage your Dhikrs.</p>}
+              {user && !isLoading && (!dhikrs || dhikrs.length === 0) && <p className="text-sm text-muted-foreground text-center pt-8">No Dhikrs added yet.</p>}
               </ul>
           </ScrollArea>
         </CardContent>
