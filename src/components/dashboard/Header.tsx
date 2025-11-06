@@ -110,10 +110,6 @@ export default function Header() {
                     <LogIn className="mr-2 h-4 w-4" />
                     Log in
                   </Button>
-                  <Button variant="secondary" onClick={handleGuestLogin}>
-                      <User className="mr-2 h-4 w-4" />
-                      Guest
-                  </Button>
                 </>
               )}
           </div>
